@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadData, showDemoError } from '../src/data/load';
-import { parseGeneration, parseTemperature } from '../src/data/types';
+import { parseHallucination, parseMemory, parseTemperature } from '../src/data/types';
 
 const read = (name: string): unknown =>
   JSON.parse(readFileSync(`public/data/${name}.json`, 'utf8'));
@@ -9,13 +9,33 @@ const read = (name: string): unknown =>
 describe('data parsers', () => {
   it('accept the real files', () => {
     expect(parseTemperature(read('temperature')).samples).toHaveLength(5);
-    expect(parseGeneration(read('generation')).steps).toHaveLength(24);
+    expect(parseHallucination(read('generation')).ungrounded.steps.length).toBeGreaterThanOrEqual(12);
+    expect(parseMemory(read('memory')).capacity).toBe(6);
   });
 
   it('parseTemperature rejects 4 samples', () => {
     const raw = read('temperature') as { samples: unknown[] };
     raw.samples.pop();
     expect(() => parseTemperature(raw)).toThrow(/samples/);
+  });
+
+  it('parseHallucination rejects zero or two invented steps', () => {
+    type Raw = { ungrounded: { steps: { invented?: boolean }[] } };
+    const none = read('generation') as Raw;
+    none.ungrounded.steps.forEach((st) => delete st.invented);
+    expect(() => parseHallucination(none)).toThrow(/invented/);
+    const two = read('generation') as Raw;
+    two.ungrounded.steps[0]!.invented = true;
+    expect(() => parseHallucination(two)).toThrow(/invented/);
+  });
+
+  it('parseMemory rejects a tiny capacity and no messages', () => {
+    const small = read('memory') as { capacity: number };
+    small.capacity = 1;
+    expect(() => parseMemory(small)).toThrow(/capacity/);
+    const empty = read('memory') as { messages: string[] };
+    empty.messages = [];
+    expect(() => parseMemory(empty)).toThrow(/messages/);
   });
 });
 

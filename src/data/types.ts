@@ -17,14 +17,24 @@ export interface Candidate {
 export interface GenerationStep {
   chosen: string;
   candidates: Candidate[];
+  invented?: boolean;
 }
-export interface GenerationData {
+export interface HallucinationData {
   source: string;
-  prompt: string;
-  steps: GenerationStep[];
+  question: string;
+  ungrounded: { steps: GenerationStep[] };
+  grounded: { sourceCard: { title: string; text: string }; steps: GenerationStep[] };
 }
 
-export const GENERATION_STEPS = 24;
+export interface MemoryData {
+  source: string;
+  capacity: number;
+  instruction: string;
+  messages: string[];
+  replyRemembered: string;
+  replyForgotten: string;
+}
+
 export const GENERATION_CANDIDATES = 5;
 
 function fail(field: string, why: string): never {
@@ -66,28 +76,57 @@ export function parseTemperature(raw: unknown): TemperatureData {
   };
 }
 
-export function parseGeneration(raw: unknown): GenerationData {
+function parseSteps(v: unknown, field: string, min: number, max: number): GenerationStep[] {
+  const steps = arr(v, field);
+  if (steps.length < min || steps.length > max) fail(field, `must have ${min} to ${max} entries`);
+  return steps.map((s, i) => {
+    const o = obj(s, `${field}[${i}]`);
+    const chosen = str(o.chosen, `${field}[${i}].chosen`);
+    const cands = arr(o.candidates, `${field}[${i}].candidates`);
+    if (cands.length !== GENERATION_CANDIDATES) fail(`${field}[${i}].candidates`, `must have ${GENERATION_CANDIDATES} entries`);
+    const candidates = cands.map((c, j) => {
+      const co = obj(c, `${field}[${i}].candidates[${j}]`);
+      const p = num(co.p, `${field}[${i}].candidates[${j}].p`);
+      if (p < 0 || p > 1) fail(`${field}[${i}].candidates[${j}].p`, 'must be between 0 and 1');
+      return { token: str(co.token, `${field}[${i}].candidates[${j}].token`), p };
+    });
+    if (candidates.some((c, j) => j > 0 && c.p > candidates[j - 1]!.p)) fail(`${field}[${i}].candidates`, 'must be sorted by p descending');
+    if (candidates.reduce((a, c) => a + c.p, 0) > 1 + 1e-3) fail(`${field}[${i}].candidates`, 'p must sum to at most 1');
+    if (!candidates.some((c) => c.token === chosen)) fail(`${field}[${i}].chosen`, 'must be one of the candidates');
+    if (o.invented !== undefined && typeof o.invented !== 'boolean') fail(`${field}[${i}].invented`, 'must be a boolean');
+    return o.invented === true ? { chosen, candidates, invented: true } : { chosen, candidates };
+  });
+}
+
+export function parseHallucination(raw: unknown): HallucinationData {
   const root = obj(raw, 'generation');
-  const steps = arr(root.steps, 'steps');
-  if (steps.length !== GENERATION_STEPS) fail('steps', `must have ${GENERATION_STEPS} entries`);
+  const ungrounded = parseSteps(obj(root.ungrounded, 'ungrounded').steps, 'ungrounded.steps', 12, 20);
+  if (ungrounded.filter((s) => s.invented).length !== 1) fail('ungrounded.steps', 'must have exactly one step with invented: true');
+  const grounded = obj(root.grounded, 'grounded');
+  const card = obj(grounded.sourceCard, 'grounded.sourceCard');
   return {
     source: str(root.source, 'source'),
-    prompt: str(root.prompt, 'prompt'),
-    steps: steps.map((s, i) => {
-      const o = obj(s, `steps[${i}]`);
-      const chosen = str(o.chosen, `steps[${i}].chosen`);
-      const cands = arr(o.candidates, `steps[${i}].candidates`);
-      if (cands.length !== GENERATION_CANDIDATES) fail(`steps[${i}].candidates`, `must have ${GENERATION_CANDIDATES} entries`);
-      const candidates = cands.map((c, j) => {
-        const co = obj(c, `steps[${i}].candidates[${j}]`);
-        const p = num(co.p, `steps[${i}].candidates[${j}].p`);
-        if (p < 0 || p > 1) fail(`steps[${i}].candidates[${j}].p`, 'must be between 0 and 1');
-        return { token: str(co.token, `steps[${i}].candidates[${j}].token`), p };
-      });
-      if (candidates.some((c, j) => j > 0 && c.p > candidates[j - 1]!.p)) fail(`steps[${i}].candidates`, 'must be sorted by p descending');
-      if (candidates.reduce((a, c) => a + c.p, 0) > 1 + 1e-3) fail(`steps[${i}].candidates`, 'p must sum to at most 1');
-      if (!candidates.some((c) => c.token === chosen)) fail(`steps[${i}].chosen`, 'must be one of the candidates');
-      return { chosen, candidates };
-    }),
+    question: str(root.question, 'question'),
+    ungrounded: { steps: ungrounded },
+    grounded: {
+      sourceCard: { title: str(card.title, 'grounded.sourceCard.title'), text: str(card.text, 'grounded.sourceCard.text') },
+      steps: parseSteps(grounded.steps, 'grounded.steps', 8, 16),
+    },
+  };
+}
+
+export function parseMemory(raw: unknown): MemoryData {
+  const root = obj(raw, 'memory');
+  const capacity = num(root.capacity, 'capacity');
+  if (!Number.isInteger(capacity) || capacity < 2) fail('capacity', 'must be an integer of at least 2');
+  const messages = arr(root.messages, 'messages').map((m, i) => str(m, `messages[${i}]`));
+  if (messages.length < 8 || messages.length > 12) fail('messages', 'must have 8 to 12 entries');
+  return {
+    source: str(root.source, 'source'),
+    capacity,
+    instruction: str(root.instruction, 'instruction'),
+    messages,
+    replyRemembered: str(root.replyRemembered, 'replyRemembered'),
+    replyForgotten: str(root.replyForgotten, 'replyForgotten'),
   };
 }

@@ -1,0 +1,19 @@
+{
+ "source": "Illustrative example, hand-made to match how real models behave.",
+ "capacity": 6,
+ "instruction": "Always reply in French.",
+ "messages": [
+  "Hi! I'm planning a trip to Lisbon in May.",
+  "Any tips for the first day?",
+  "What should I pack?",
+  "Is the weather warm that time of year?",
+  "How do I get from the airport to the city?",
+  "Which neighborhood is best to stay in?",
+  "Are the trams worth riding?",
+  "What local food should I try?",
+  "Is it safe to walk around at night?",
+  "Can you suggest a day trip?"
+ ],
+ "replyRemembered": "Bien sûr ! Je vous conseille de commencer par le quartier d'Alfama.",
+ "replyForgotten": "Sure! I recommend starting with the Alfama neighborhood."
+}
