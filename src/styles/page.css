@@ -47,6 +47,11 @@ a { color: inherit; }
   font-weight: 600;
   letter-spacing: -0.01em;
   text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(5, 6, 10, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .status-pill {
@@ -78,16 +83,10 @@ a { color: inherit; }
 }
 .status-pill[data-state='unavailable']::before { background: #71717a; box-shadow: none; }
 
-/* Hero */
-.hero {
-  min-height: 70svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 96px var(--gutter) 40px;
-}
-.hero h1 { font-size: clamp(52px, 11vw, 132px); }
-.hero .sub { margin: 20px 0 0; font-size: clamp(18px, 2.4vw, 26px); color: var(--text-soft); letter-spacing: -0.01em; }
+/* Opening title block, at the top of the first section */
+.title-block { margin-bottom: auto; }
+.title-block h1 { font-size: clamp(40px, 8vw, 96px); }
+.title-block .sub { margin: 16px 0 0; font-size: clamp(16px, 2vw, 22px); color: var(--text-soft); letter-spacing: -0.01em; }
 
 /* Sections */
 .stage-section {
@@ -106,13 +105,8 @@ a { color: inherit; }
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: radial-gradient(ellipse 60% 50% at 50% 38%, var(--glow, var(--glow-attention)), transparent 70%);
+  background: radial-gradient(ellipse 60% 50% at 50% 38%, var(--glow), transparent 70%);
 }
-#attention { --glow: var(--glow-attention); }
-#orange { --glow: var(--glow-orange); }
-#jello { --glow: var(--glow-jello); }
-#flower { --glow: var(--glow-flower); }
-#rocket { --glow: var(--glow-rocket); }
 
 .stage-canvas {
   position: absolute;
@@ -125,7 +119,29 @@ a { color: inherit; }
 }
 .stage-text { max-width: 560px; }
 .stage-section h2 { font-size: clamp(36px, 6vw, 72px); }
-.lede { margin: 18px 0 0; font-size: clamp(16px, 1.8vw, 20px); line-height: 1.5; color: var(--text-soft); }
+.ask { max-width: 18ch; }
+.ask em { font-style: normal; color: var(--accent); }
+.stage-section h2.ask { font-size: clamp(32px, 5.4vw, 64px); }
+
+/* Show / Your turn / Why beats: hidden until a controller adds .is-shown (no-JS shows everything). */
+.caption { margin: 18px 0 0; font-size: clamp(17px, 1.9vw, 22px); line-height: 1.4; color: var(--text-soft); font-weight: 500; letter-spacing: -0.01em; }
+.hint { margin: 14px 0 0; font-size: 16px; line-height: 1.4; color: rgba(255, 255, 255, 0.85); font-weight: 600; }
+.why { margin-top: 24px; display: grid; gap: 8px; }
+.why p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--text-soft); }
+.why strong { color: var(--text); }
+html.js .caption, html.js .hint, html.js .why { opacity: 0; transform: translateY(8px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
+html.js .caption.is-shown, html.js .hint.is-shown, html.js .why.is-shown { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { html.js .caption, html.js .hint, html.js .why { transition: none; transform: none; } }
+
+/* Section controls */
+.flower-controls, .tube-controls { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+.jello-controls, .rocket-controls { margin-top: 20px; display: grid; gap: 10px; }
+.slider-label { font-size: 14px; font-weight: 600; color: var(--text-soft); }
+.slider-label output { color: var(--text); margin-left: 6px; }
+.jello-controls input[type='range'], .rocket-controls input[type='range'] { width: 100%; accent-color: var(--accent); }
+.answer { margin: 0; font-size: 16px; line-height: 1.45; min-height: 3em; }
+.odds { margin: 0; font-size: clamp(40px, 7vw, 72px); font-weight: 700; letter-spacing: -0.03em; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .deeper-btn { margin-top: 24px; }
 
 /* Ending */
@@ -171,9 +187,7 @@ html.js [data-reveal] { opacity: 0; transform: translateY(16px); transition: opa
 html.js [data-reveal].in-view { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { html.js [data-reveal] { opacity: 1; transform: none; transition: none; } }
 
-/* Attention: sentence picker and the token row that mirrors the 3D words. */
-.attn-controls { margin-top: 24px; display: flex; flex-direction: column; gap: 14px; }
-.sentence-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Pill buttons (orange cuts) */
 .pill {
   font: inherit;
   font-size: 13px;
@@ -186,34 +200,7 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
   cursor: pointer;
 }
 .pill:hover { color: var(--text); }
-.pill[aria-pressed='true'] { color: var(--stage); background: var(--text); border-color: var(--text); }
-.token-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.token {
-  font: inherit;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text);
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  transition: background 160ms ease-out, border-color 160ms ease-out, box-shadow 160ms ease-out;
-}
-.token[data-linked] {
-  background: rgba(125, 140, 255, calc(0.1 + 0.35 * var(--w, 1)));
-  box-shadow: 0 0 calc(18px * var(--w, 1)) rgba(125, 140, 255, 0.55);
-}
-.token[data-active] { background: var(--text); color: var(--stage); }
-.pill:focus-visible, .token:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-#attention-canvas { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
-/* The attention field also fills the space behind the page title, so the first screen is alive. */
-.hero { position: relative; z-index: 1; }
-#attention { overflow: visible; }
-#attention::before, #attention .stage-canvas { top: -70svh; height: calc(100% + 70svh); }
+.pill:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* Orange: sentence input, token chips and cut buttons. */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

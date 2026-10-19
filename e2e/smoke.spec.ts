@@ -4,7 +4,7 @@ import { PORTFOLIO_URL, REPO_URL } from '../src/config'
 test('page loads hero copy', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('h1')).toContainText('Inside the Model')
-  await expect(page.getByText('Five things AI does, made visible.')).toBeVisible()
+  await expect(page.getByText('Five surprising truths about AI, made visible.')).toBeVisible()
 })
 
 test('no horizontal scroll on phone', async ({ page }) => {
@@ -26,12 +26,20 @@ test('no console errors', async ({ page }) => {
 test('five sections in order', async ({ page }) => {
   await page.goto('/')
   const ids = await page.locator('section.stage-section').evaluateAll((els) => els.map((e) => e.id))
-  expect(ids).toEqual(['attention', 'orange', 'jello', 'flower', 'rocket'])
+  expect(ids).toEqual(['orange', 'flower', 'jello', 'tube', 'rocket'])
 })
 
 test('eyebrows numbered', async ({ page }) => {
   await page.goto('/')
-  await expect(page.locator('section.stage-section .eyebrow').first()).toHaveText(/^01 · ATTENTION$/i)
+  await expect(page.locator('section.stage-section .eyebrow').first()).toHaveText(/^01 · TOKENS$/i)
+})
+
+test('every section has both why lines', async ({ page }) => {
+  await page.goto('/')
+  for (const id of ['orange', 'flower', 'jello', 'tube', 'rocket']) {
+    await expect(page.locator(`#${id} [data-why="you"]`)).toHaveCount(1)
+    await expect(page.locator(`#${id} [data-why="builders"]`)).toHaveCount(1)
+  }
 })
 
 test('ending links', async ({ page }) => {

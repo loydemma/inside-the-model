@@ -5,7 +5,7 @@ import type { Deeper } from '../src/ui/deeper'
 function setup() {
   document.body.innerHTML = `<section id="orange">
     <input data-sentence-input />
-    <div data-chips></div><p data-truncated hidden></p><p data-hint hidden></p>
+    <div data-chips></div><p data-truncated hidden></p><p data-empty-note hidden></p>
     <div data-cuts><button data-cut="0"></button><button data-cut="45"></button></div></section>`
   const deeper = { open: vi.fn(), close: vi.fn(), setSlot: vi.fn() } as unknown as Deeper
   const scene = { setTokens: vi.fn(), slice: vi.fn(), reset: vi.fn(), dispose: vi.fn() } as unknown as OrangeScene
@@ -19,8 +19,8 @@ describe('orange controller', () => {
   it('shows the hint and disables cutting for blank input', async () => {
     const { root, scene, ctl } = setup()
     await ctl.update('   ')
-    expect(root.querySelector<HTMLElement>('[data-hint]')!.hidden).toBe(false)
-    expect(root.querySelector('[data-hint]')!.textContent).toBe('Type something to slice')
+    expect(root.querySelector<HTMLElement>('[data-empty-note]')!.hidden).toBe(false)
+    expect(root.querySelector('[data-empty-note]')!.textContent).toBe('Type something to slice')
     ctl.cut(0)
     expect(scene.slice).not.toHaveBeenCalled()
   })
@@ -45,7 +45,7 @@ describe('orange controller', () => {
       return { observe: vi.fn(), disconnect: vi.fn() }
     }) as unknown as typeof IntersectionObserver
     document.body.innerHTML = `<section id="orange"><input data-sentence-input value="hello world" />
-      <div data-chips></div><p data-truncated hidden></p><p data-hint hidden></p><button data-cut="0"></button></section>`
+      <div data-chips></div><p data-truncated hidden></p><p data-empty-note hidden></p><button data-cut="0"></button></section>`
     const root = document.getElementById('orange') as HTMLElement
     createOrangeController(root, { setSlot: vi.fn() } as unknown as Deeper, FakeIO)
     expect(root.querySelector('[data-cut]')).toHaveProperty('disabled', true)

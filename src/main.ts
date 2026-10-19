@@ -2,10 +2,7 @@ import { initDeeper } from './ui/deeper'
 import { detectQuality } from './engine/quality'
 import { setStatus, showFallback } from './engine/status'
 import { initReveals } from './engine/reveal'
-import { mountWhenVisible } from './engine/sceneHost'
-import { loadData, showDemoError } from './data/load'
-import { parseAttention } from './data/types'
-import { createAttentionController } from './sections/attention/attentionController'
+import { onFirstArrival } from './engine/arrival'
 import { createOrangeController } from './sections/orange/orangeController'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
@@ -30,24 +27,16 @@ document.querySelectorAll<HTMLButtonElement>('.deeper-btn').forEach((b) => {
   b.addEventListener('click', () => deeper.open(b.dataset.deeper as string))
 })
 
-// Attention is the first section, so its data loads right away. The token row works on its
-// own; the 3D scene attaches when it scrolls into view.
-const attentionSection = document.getElementById('attention') as HTMLElement
-const attentionCanvas = document.getElementById('attention-canvas') as HTMLCanvasElement
-loadData('/data/attention.json', parseAttention).then(
-  (data) => {
-    const attention = createAttentionController(attentionSection, data, deeper)
-    if (q.software) return
-    mountWhenVisible(attentionCanvas, async () => {
-      const { createAttentionScene } = await import('./sections/attention/attentionScene')
-      const scene = await createAttentionScene(attentionCanvas, q, attention.focus)
-      attention.attach(scene)
-      return scene
-    })
-  },
-  () => showDemoError(attentionSection),
-)
-
 // Tokenizing is real and works with no 3D, so the controller starts right away. The orange
 // scene attaches later.
 createOrangeController(document.getElementById('orange') as HTMLElement, deeper)
+
+// Until each section's controller drives its own intro (playIntro / showAnswered), reveal the
+// caption, hint and why lines the first time the section arrives (straight away on reduced motion).
+document.querySelectorAll<HTMLElement>('section.stage-section').forEach((section) => {
+  const reveal = (): void => {
+    section.querySelectorAll('.caption, .hint, .why').forEach((el) => el.classList.add('is-shown'))
+  }
+  if (q.reducedMotion) reveal()
+  else onFirstArrival(section, reveal)
+})

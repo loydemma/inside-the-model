@@ -1,12 +1,4 @@
-export interface AttentionSentence {
-  text: string;
-  tokens: string[];
-  weights: number[][];
-}
-export interface AttentionData {
-  source: string;
-  sentences: AttentionSentence[];
-}
+import { TEMPERATURE_STOPS } from '../config';
 
 export interface TemperatureSample {
   temperature: number;
@@ -32,23 +24,8 @@ export interface GenerationData {
   steps: GenerationStep[];
 }
 
-export interface AgentStep {
-  part: string;
-  title: string;
-  tool: string;
-  detail: string;
-}
-export interface AgentPlan {
-  source: string;
-  task: string;
-  steps: AgentStep[];
-}
-
-export const TEMPERATURE_STOPS = [0, 0.5, 1, 1.5, 2];
 export const GENERATION_STEPS = 24;
 export const GENERATION_CANDIDATES = 5;
-export const ROCKET_PARTS = ['nose cone', 'payload bay', 'upper stage', 'interstage', 'main tank', 'engine'];
-export const AGENT_TOOLS = ['web_search', 'read_file', 'run_code', 'write_file', 'ask_user'];
 
 function fail(field: string, why: string): never {
   throw new Error(`Invalid data: ${field} ${why}`);
@@ -69,34 +46,6 @@ function num(v: unknown, field: string): number {
 function arr(v: unknown, field: string): unknown[] {
   if (!Array.isArray(v)) fail(field, 'must be an array');
   return v as unknown[];
-}
-
-export function parseAttention(raw: unknown): AttentionData {
-  const root = obj(raw, 'attention');
-  const sentences = arr(root.sentences, 'sentences');
-  if (sentences.length < 3 || sentences.length > 4) fail('sentences', 'must have 3 or 4 entries');
-  return {
-    source: str(root.source, 'source'),
-    sentences: sentences.map((s, k) => {
-      const o = obj(s, `sentences[${k}]`);
-      const tokens = arr(o.tokens, `sentences[${k}].tokens`).map((t, i) =>
-        str(t, `sentences[${k}].tokens[${i}]`),
-      );
-      if (tokens.length > 14) fail(`sentences[${k}].tokens`, 'must have at most 14 tokens');
-      const rows = arr(o.weights, `sentences[${k}].weights`);
-      if (rows.length !== tokens.length) fail(`sentences[${k}].weights`, 'must be square (rows != tokens)');
-      const weights = rows.map((r, i) => {
-        const row = arr(r, `sentences[${k}].weights[${i}]`).map((w, j) =>
-          num(w, `sentences[${k}].weights[${i}][${j}]`),
-        );
-        if (row.length !== tokens.length) fail(`sentences[${k}].weights[${i}]`, 'must be square (row length != tokens)');
-        if (Math.abs(row.reduce((a, b) => a + b, 0) - 1) > 1e-3) fail(`sentences[${k}].weights[${i}]`, 'must sum to 1');
-        if (row.slice(i + 1).some((w) => w !== 0)) fail(`sentences[${k}].weights[${i}]`, 'must be causal (zero after the diagonal)');
-        return row;
-      });
-      return { text: str(o.text, `sentences[${k}].text`), tokens, weights };
-    }),
-  };
 }
 
 export function parseTemperature(raw: unknown): TemperatureData {
@@ -139,24 +88,6 @@ export function parseGeneration(raw: unknown): GenerationData {
       if (candidates.reduce((a, c) => a + c.p, 0) > 1 + 1e-3) fail(`steps[${i}].candidates`, 'p must sum to at most 1');
       if (!candidates.some((c) => c.token === chosen)) fail(`steps[${i}].chosen`, 'must be one of the candidates');
       return { chosen, candidates };
-    }),
-  };
-}
-
-export function parseAgentPlan(raw: unknown): AgentPlan {
-  const root = obj(raw, 'agent plan');
-  const steps = arr(root.steps, 'steps');
-  if (steps.length !== ROCKET_PARTS.length) fail('steps', `must have ${ROCKET_PARTS.length} entries`);
-  return {
-    source: str(root.source, 'source'),
-    task: str(root.task, 'task'),
-    steps: steps.map((s, i) => {
-      const o = obj(s, `steps[${i}]`);
-      const part = str(o.part, `steps[${i}].part`);
-      if (part !== ROCKET_PARTS[i]) fail(`steps[${i}].part`, `must be "${ROCKET_PARTS[i]}"`);
-      const tool = str(o.tool, `steps[${i}].tool`);
-      if (!AGENT_TOOLS.includes(tool)) fail(`steps[${i}].tool`, `must be one of ${AGENT_TOOLS.join(', ')}`);
-      return { part, title: str(o.title, `steps[${i}].title`), tool, detail: str(o.detail, `steps[${i}].detail`) };
     }),
   };
 }

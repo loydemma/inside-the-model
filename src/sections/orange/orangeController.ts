@@ -20,7 +20,7 @@ export function createOrangeController(
   const input = root.querySelector<HTMLInputElement>('[data-sentence-input]') as HTMLInputElement
   const chips = root.querySelector<HTMLElement>('[data-chips]') as HTMLElement
   const note = root.querySelector<HTMLElement>('[data-truncated]') as HTMLElement
-  const hint = root.querySelector<HTMLElement>('[data-hint]') as HTMLElement
+  const emptyNote = root.querySelector<HTMLElement>('[data-empty-note]') as HTMLElement
   const cutButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-cut]')]
   let scene: OrangeScene | null = null
   let tokens: Token[] = []
@@ -43,8 +43,8 @@ export function createOrangeController(
         return chip
       }),
     )
-    hint.textContent = 'Type something to slice'
-    hint.hidden = !empty
+    emptyNote.textContent = 'Type something to slice'
+    emptyNote.hidden = !empty
     note.hidden = !result.truncated
     note.textContent = result.truncated ? `Showing the first ${MAX_TOKENS} of ${result.total} tokens` : ''
     cutButtons.forEach((b) => { b.disabled = empty })

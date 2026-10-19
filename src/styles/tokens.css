@@ -6,11 +6,9 @@
   --text-soft: #a1a1aa;
   --rule: rgba(255, 255, 255, 0.12);
 
-  --glow-attention: rgba(120, 140, 255, 0.22);
-  --glow-orange: rgba(255, 140, 40, 0.22);
-  --glow-jello: rgba(255, 70, 120, 0.2);
-  --glow-flower: rgba(190, 120, 255, 0.2);
-  --glow-rocket: rgba(90, 200, 255, 0.2);
+  /* One calm, faint deep-blue glow behind every section */
+  --glow: rgba(60, 85, 190, 0.16);
+  --accent: #9aa6ff;
 
   /* Frosted light glass (Go deeper) */
   --glass: rgba(246, 247, 250, 0.86);
