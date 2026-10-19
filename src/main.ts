@@ -1,7 +1,10 @@
+import { initDeeper } from './ui/deeper'
 import { detectQuality } from './engine/quality'
 import { setStatus, showFallback } from './engine/renderer'
 import { initReveals } from './engine/reveal'
 import { PORTFOLIO_URL, REPO_URL } from './config'
+
+document.documentElement.classList.add('js')
 
 const q = detectQuality()
 setStatus('LOADING')
@@ -16,3 +19,8 @@ if (q.software) {
 
 document.querySelectorAll<HTMLAnchorElement>('[data-portfolio-link]').forEach((a) => { a.href = PORTFOLIO_URL })
 document.querySelectorAll<HTMLAnchorElement>('[data-repo-link]').forEach((a) => { a.href = REPO_URL })
+
+const deeper = initDeeper(document)
+document.querySelectorAll<HTMLButtonElement>('.deeper-btn').forEach((b) => {
+  b.addEventListener('click', () => deeper.open(b.dataset.deeper as string))
+})

@@ -8,6 +8,7 @@
   <meta name="description" content="Five things AI does, made visible: attention, tokenization, temperature, generation and agents, as interactive 3D scenes." />
   <link rel="stylesheet" href="/src/styles/tokens.css" />
   <link rel="stylesheet" href="/src/styles/page.css" />
+  <link rel="stylesheet" href="/src/styles/deeper.css" />
 </head>
 <body>
   <a class="home-link" href="#" data-portfolio-link>Emma Loyd</a>
@@ -98,6 +99,11 @@
       </div>
     </section>
   </main>
+
+  <aside id="deeper-panel" role="dialog" aria-label="Go deeper" aria-hidden="true">
+    <button type="button" data-deeper-close>Close</button>
+    <div data-deeper-body></div>
+  </aside>
 
   <div class="fallback-card" id="fallback-card" hidden role="status">
     <p class="card-title">3D unavailable</p>

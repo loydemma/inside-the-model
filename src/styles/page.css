@@ -128,16 +128,6 @@ a { color: inherit; }
 .lede { margin: 18px 0 0; font-size: clamp(16px, 1.8vw, 20px); line-height: 1.5; color: var(--text-soft); }
 .deeper-btn { margin-top: 24px; }
 
-/* Go deeper sheet (wired in a later task); templates hold the content */
-.deeper-sheet {
-  background: var(--glass);
-  color: var(--glass-ink);
-  border: 1px solid var(--glass-edge);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: var(--radius);
-}
-
 /* Ending */
 .ending {
   min-height: 70svh;
@@ -177,6 +167,6 @@ a { color: inherit; }
 .no-3d .stage-canvas { display: none; }
 
 /* Scroll reveals */
-[data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
-[data-reveal].in-view { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1; transform: none; transition: none; } }
+html.js [data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
+html.js [data-reveal].in-view { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { html.js [data-reveal] { opacity: 1; transform: none; transition: none; } }
