@@ -221,3 +221,26 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
 .note { margin: 0; font-size: 13px; opacity: 0.7; }
 .cut-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .cut-row .pill:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Orange opener. The canvas spans the section; the stage marks where the orange sits and is the
+   only place that captures a swipe, so the page still scrolls everywhere else. */
+#orange .title-block h1 { font-size: clamp(30px, 4.4vw, 54px); }
+#orange .title-block .sub { margin-top: 10px; font-size: clamp(15px, 1.6vw, 19px); }
+.orange-stage {
+  height: clamp(250px, 38svh, 360px);
+  margin: 12px calc(-1 * var(--gutter)) 0;
+  touch-action: none;
+  cursor: grab;
+}
+.orange-stage:active { cursor: grabbing; }
+.no-3d .orange-stage { display: none; }
+/* With the 3D labels showing the pieces, the chips stay for screen readers only. */
+.stage-canvas[data-ready='true'] ~ .stage-text .chips { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+html.js .orange-controls { opacity: 0; transform: translateY(8px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
+html.js .orange-controls.is-shown { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { html.js .orange-controls { transition: none; transform: none; } }
+@media (min-width: 900px) {
+  #orange::before { background: radial-gradient(ellipse 45% 55% at 72% 50%, var(--glow), transparent 70%); }
+  #orange .stage-text { max-width: min(520px, 42vw); }
+  #orange .orange-stage { position: absolute; top: 64px; bottom: 40px; right: 0; width: 56%; height: auto; margin: 0; }
+}

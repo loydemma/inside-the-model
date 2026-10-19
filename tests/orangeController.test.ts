@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createOrangeController, type OrangeScene } from '../src/sections/orange/orangeController'
+import { tokenize } from '../src/sections/orange/tokenize'
 import type { Deeper } from '../src/ui/deeper'
 
 function setup() {
   document.body.innerHTML = `<section id="orange">
+    <p data-caption></p><p data-hint></p><div class="why"></div>
     <input data-sentence-input />
     <div data-chips></div><p data-truncated hidden></p><p data-empty-note hidden></p>
     <div data-cuts><button data-cut="0"></button><button data-cut="45"></button></div></section>`
@@ -52,5 +54,36 @@ describe('orange controller', () => {
     expect(root.querySelector('[data-chips]')!.children).toHaveLength(0)
     fire([{ isIntersecting: true }])
     await vi.waitFor(() => expect(root.querySelector('[data-chips]')!.children).toHaveLength(2))
+  })
+
+  it('plays the intro: slices strawberry by itself, then reveals caption, hint and why', async () => {
+    await tokenize('warm up') // the tokenizer loads before the clock is faked
+    const { root, scene, ctl } = setup()
+    vi.useFakeTimers()
+    try {
+      const done = ctl.playIntro()
+      await vi.runAllTimersAsync()
+      await done
+    } finally {
+      vi.useRealTimers()
+    }
+    const { tokens } = await tokenize('strawberry')
+    expect(scene.setTokens).toHaveBeenLastCalledWith(tokens)
+    expect(scene.slice).toHaveBeenCalledWith(0)
+    const setOrder = vi.mocked(scene.setTokens).mock.invocationCallOrder.at(-1)!
+    expect(vi.mocked(scene.slice).mock.invocationCallOrder[0]).toBeGreaterThan(setOrder)
+    for (const sel of ['[data-caption]', '[data-hint]', '.why']) {
+      expect(root.querySelector(sel)!.classList.contains('is-shown')).toBe(true)
+    }
+  })
+
+  it('shows the answered state straight away on reduced motion, slicing once', async () => {
+    const { root, scene, ctl } = setup()
+    ctl.showAnswered()
+    for (const sel of ['[data-caption]', '[data-hint]', '.why']) {
+      expect(root.querySelector(sel)!.classList.contains('is-shown')).toBe(true)
+    }
+    await vi.waitFor(() => expect(scene.slice).toHaveBeenCalledWith(0))
+    expect(scene.slice).toHaveBeenCalledTimes(1)
   })
 })

@@ -3,6 +3,7 @@ import { detectQuality } from './engine/quality'
 import { setStatus, showFallback } from './engine/status'
 import { initReveals } from './engine/reveal'
 import { onFirstArrival } from './engine/arrival'
+import { mountWhenVisible } from './engine/sceneHost'
 import { createOrangeController } from './sections/orange/orangeController'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
@@ -28,12 +29,23 @@ document.querySelectorAll<HTMLButtonElement>('.deeper-btn').forEach((b) => {
 })
 
 // Tokenizing is real and works with no 3D, so the controller starts right away. The orange
-// scene attaches later.
-createOrangeController(document.getElementById('orange') as HTMLElement, deeper)
+// scene attaches when it scrolls near.
+const orangeSection = document.getElementById('orange') as HTMLElement
+const orangeCanvas = document.getElementById('orange-canvas') as HTMLCanvasElement
+const orange = createOrangeController(orangeSection, deeper)
+onFirstArrival(orangeSection, () => (q.reducedMotion ? orange.showAnswered() : void orange.playIntro()))
+if (!q.software) {
+  mountWhenVisible(orangeCanvas, async () => {
+    const { createOrangeScene } = await import('./sections/orange/orangeScene')
+    const scene = await createOrangeScene(orangeCanvas, q)
+    orange.attach(scene)
+    return scene
+  })
+}
 
 // Until each section's controller drives its own intro (playIntro / showAnswered), reveal the
 // caption, hint and why lines the first time the section arrives (straight away on reduced motion).
-document.querySelectorAll<HTMLElement>('section.stage-section').forEach((section) => {
+document.querySelectorAll<HTMLElement>('section.stage-section:not(#orange)').forEach((section) => {
   const reveal = (): void => {
     section.querySelectorAll('.caption, .hint, .why').forEach((el) => el.classList.add('is-shown'))
   }
