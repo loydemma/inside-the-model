@@ -1,0 +1,42 @@
+{
+ "source": "Illustrative example, hand-made to match how real models behave.",
+ "task": "Find why last week's signups dropped and draft a fix.",
+ "steps": [
+  {
+   "part": "nose cone",
+   "title": "Pin down the drop",
+   "tool": "run_code",
+   "detail": "Queries the signups table by day and channel. Signups fell 31% starting Tuesday, almost entirely on mobile web."
+  },
+  {
+   "part": "payload bay",
+   "title": "Check what shipped",
+   "tool": "read_file",
+   "detail": "Reads the release notes and the changelog for last week. Tuesday's deploy changed the signup form's email validation."
+  },
+  {
+   "part": "upper stage",
+   "title": "Look for known issues",
+   "tool": "web_search",
+   "detail": "Searches for reports of the same validation library failing on mobile browsers. Finds a bug affecting plus-addressed emails on iOS."
+  },
+  {
+   "part": "interstage",
+   "title": "Confirm the cause",
+   "tool": "run_code",
+   "detail": "Replays failed form submissions from the logs. 94% of rejected emails contain a plus sign, so the validator is the cause."
+  },
+  {
+   "part": "main tank",
+   "title": "Ask about the fix",
+   "tool": "ask_user",
+   "detail": "Asks whether to loosen the validation or roll back Tuesday's deploy, since the choice affects other work in flight."
+  },
+  {
+   "part": "engine",
+   "title": "Draft the fix",
+   "tool": "write_file",
+   "detail": "Writes a patch that accepts plus-addressed emails, adds a regression test, and drafts a short summary for the team."
+  }
+ ]
+}

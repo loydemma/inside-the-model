@@ -1,0 +1,26 @@
+{
+ "source": "Illustrative example, hand-made to match how real models behave.",
+ "prompt": "Describe a rainy afternoon in one short paragraph.",
+ "samples": [
+  {
+   "temperature": 0,
+   "text": "A rainy afternoon is quiet and gray. The rain falls steadily on the windows, and the streets are wet. People stay inside, drink tea, and read books while the rain continues to fall outside."
+  },
+  {
+   "temperature": 0.5,
+   "text": "Rain taps steadily against the windows on a gray afternoon, and the streets shine with puddles. Inside, the house feels warm and slow. Someone makes tea, picks up a book, and listens to the rain."
+  },
+  {
+   "temperature": 1,
+   "text": "The afternoon turns soft and gray as rain drums on the roof. Umbrellas bloom along the street, and the smell of wet pavement drifts in through a cracked window. A kettle clicks off, and nobody is in a hurry."
+  },
+  {
+   "temperature": 1.5,
+   "text": "Silver rain stitches the rooftops to the clouds while a neighbor's cat judges the puddles from a windowsill. The kettle hums an off-key lullaby, and somewhere a forgotten umbrella dreams of being a mushroom."
+  },
+  {
+   "temperature": 2,
+   "text": "Rain clatters like loose violins down the marmalade afternoon, and the puddles grow opinions. Clocks wander off in slippers. The kettle composes a tax law, umbrellas migrate south, and Tuesday tastes faintly of velvet thunder."
+  }
+ ]
+}

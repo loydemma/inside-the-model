@@ -1,0 +1,606 @@
+{
+ "source": "Illustrative example, hand-made to match how real models behave.",
+ "prompt": "Explain in one sentence why the sky is blue.",
+ "steps": [
+  {
+   "chosen": "The",
+   "candidates": [
+    {
+     "token": "The",
+     "p": 0.46
+    },
+    {
+     "token": "Sunlight",
+     "p": 0.17
+    },
+    {
+     "token": "Our",
+     "p": 0.09
+    },
+    {
+     "token": "It",
+     "p": 0.08
+    },
+    {
+     "token": "When",
+     "p": 0.05
+    }
+   ]
+  },
+  {
+   "chosen": " sky",
+   "candidates": [
+    {
+     "token": " sky",
+     "p": 0.71
+    },
+    {
+     "token": " blue",
+     "p": 0.09
+    },
+    {
+     "token": " color",
+     "p": 0.06
+    },
+    {
+     "token": " daytime",
+     "p": 0.04
+    },
+    {
+     "token": " atmosphere",
+     "p": 0.03
+    }
+   ]
+  },
+  {
+   "chosen": " appears",
+   "candidates": [
+    {
+     "token": " is",
+     "p": 0.38
+    },
+    {
+     "token": " appears",
+     "p": 0.27
+    },
+    {
+     "token": " looks",
+     "p": 0.19
+    },
+    {
+     "token": " seems",
+     "p": 0.07
+    },
+    {
+     "token": " gets",
+     "p": 0.03
+    }
+   ]
+  },
+  {
+   "chosen": " blue",
+   "candidates": [
+    {
+     "token": " blue",
+     "p": 0.93
+    },
+    {
+     "token": " blue-",
+     "p": 0.02
+    },
+    {
+     "token": " azure",
+     "p": 0.01
+    },
+    {
+     "token": " a",
+     "p": 0.01
+    },
+    {
+     "token": " so",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " because",
+   "candidates": [
+    {
+     "token": " because",
+     "p": 0.58
+    },
+    {
+     "token": " due",
+     "p": 0.22
+    },
+    {
+     "token": " when",
+     "p": 0.07
+    },
+    {
+     "token": " since",
+     "p": 0.06
+    },
+    {
+     "token": ",",
+     "p": 0.03
+    }
+   ]
+  },
+  {
+   "chosen": " air",
+   "candidates": [
+    {
+     "token": " air",
+     "p": 0.21
+    },
+    {
+     "token": " gases",
+     "p": 0.19
+    },
+    {
+     "token": " molecules",
+     "p": 0.18
+    },
+    {
+     "token": " sunlight",
+     "p": 0.17
+    },
+    {
+     "token": " the",
+     "p": 0.14
+    }
+   ]
+  },
+  {
+   "chosen": " molecules",
+   "candidates": [
+    {
+     "token": " molecules",
+     "p": 0.64
+    },
+    {
+     "token": " gases",
+     "p": 0.14
+    },
+    {
+     "token": " particles",
+     "p": 0.1
+    },
+    {
+     "token": " in",
+     "p": 0.04
+    },
+    {
+     "token": " scatter",
+     "p": 0.02
+    }
+   ]
+  },
+  {
+   "chosen": " scatter",
+   "candidates": [
+    {
+     "token": " scatter",
+     "p": 0.82
+    },
+    {
+     "token": " bend",
+     "p": 0.05
+    },
+    {
+     "token": " scatter-",
+     "p": 0.03
+    },
+    {
+     "token": " in",
+     "p": 0.03
+    },
+    {
+     "token": " split",
+     "p": 0.02
+    }
+   ]
+  },
+  {
+   "chosen": " short",
+   "candidates": [
+    {
+     "token": " blue",
+     "p": 0.34
+    },
+    {
+     "token": " short",
+     "p": 0.29
+    },
+    {
+     "token": " sunlight",
+     "p": 0.2
+    },
+    {
+     "token": " light",
+     "p": 0.08
+    },
+    {
+     "token": " shorter",
+     "p": 0.04
+    }
+   ]
+  },
+  {
+   "chosen": " blue",
+   "candidates": [
+    {
+     "token": " blue",
+     "p": 0.52
+    },
+    {
+     "token": " wavelengths",
+     "p": 0.3
+    },
+    {
+     "token": " wave",
+     "p": 0.06
+    },
+    {
+     "token": " light",
+     "p": 0.05
+    },
+    {
+     "token": " violet",
+     "p": 0.03
+    }
+   ]
+  },
+  {
+   "chosen": " wavelengths",
+   "candidates": [
+    {
+     "token": " wavelengths",
+     "p": 0.77
+    },
+    {
+     "token": " light",
+     "p": 0.14
+    },
+    {
+     "token": " colors",
+     "p": 0.05
+    },
+    {
+     "token": " and",
+     "p": 0.01
+    },
+    {
+     "token": " sunlight",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " of",
+   "candidates": [
+    {
+     "token": " of",
+     "p": 0.88
+    },
+    {
+     "token": " more",
+     "p": 0.04
+    },
+    {
+     "token": " in",
+     "p": 0.03
+    },
+    {
+     "token": " from",
+     "p": 0.02
+    },
+    {
+     "token": ",",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " sunlight",
+   "candidates": [
+    {
+     "token": " sunlight",
+     "p": 0.69
+    },
+    {
+     "token": " light",
+     "p": 0.25
+    },
+    {
+     "token": " the",
+     "p": 0.03
+    },
+    {
+     "token": " visible",
+     "p": 0.01
+    },
+    {
+     "token": " white",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " far",
+   "candidates": [
+    {
+     "token": " far",
+     "p": 0.37
+    },
+    {
+     "token": " much",
+     "p": 0.31
+    },
+    {
+     "token": " more",
+     "p": 0.15
+    },
+    {
+     "token": " about",
+     "p": 0.06
+    },
+    {
+     "token": " many",
+     "p": 0.04
+    }
+   ]
+  },
+  {
+   "chosen": " more",
+   "candidates": [
+    {
+     "token": " more",
+     "p": 0.9
+    },
+    {
+     "token": " less",
+     "p": 0.03
+    },
+    {
+     "token": " better",
+     "p": 0.02
+    },
+    {
+     "token": " easily",
+     "p": 0.02
+    },
+    {
+     "token": " so",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " than",
+   "candidates": [
+    {
+     "token": " than",
+     "p": 0.92
+    },
+    {
+     "token": " strongly",
+     "p": 0.03
+    },
+    {
+     "token": " widely",
+     "p": 0.02
+    },
+    {
+     "token": " efficiently",
+     "p": 0.01
+    },
+    {
+     "token": " readily",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " red",
+   "candidates": [
+    {
+     "token": " red",
+     "p": 0.62
+    },
+    {
+     "token": " longer",
+     "p": 0.2
+    },
+    {
+     "token": " the",
+     "p": 0.1
+    },
+    {
+     "token": " other",
+     "p": 0.05
+    },
+    {
+     "token": " orange",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " light",
+   "candidates": [
+    {
+     "token": " light",
+     "p": 0.73
+    },
+    {
+     "token": " wavelengths",
+     "p": 0.19
+    },
+    {
+     "token": ",",
+     "p": 0.03
+    },
+    {
+     "token": " and",
+     "p": 0.02
+    },
+    {
+     "token": " ones",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": ",",
+   "candidates": [
+    {
+     "token": ",",
+     "p": 0.61
+    },
+    {
+     "token": ".",
+     "p": 0.24
+    },
+    {
+     "token": " and",
+     "p": 0.1
+    },
+    {
+     "token": " so",
+     "p": 0.03
+    },
+    {
+     "token": " which",
+     "p": 0.01
+    }
+   ]
+  },
+  {
+   "chosen": " so",
+   "candidates": [
+    {
+     "token": " so",
+     "p": 0.42
+    },
+    {
+     "token": " which",
+     "p": 0.27
+    },
+    {
+     "token": " meaning",
+     "p": 0.14
+    },
+    {
+     "token": " and",
+     "p": 0.09
+    },
+    {
+     "token": " making",
+     "p": 0.04
+    }
+   ]
+  },
+  {
+   "chosen": " blue",
+   "candidates": [
+    {
+     "token": " blue",
+     "p": 0.68
+    },
+    {
+     "token": " the",
+     "p": 0.1
+    },
+    {
+     "token": " that",
+     "p": 0.07
+    },
+    {
+     "token": " we",
+     "p": 0.05
+    },
+    {
+     "token": " more",
+     "p": 0.04
+    }
+   ]
+  },
+  {
+   "chosen": " reaches",
+   "candidates": [
+    {
+     "token": " reaches",
+     "p": 0.28
+    },
+    {
+     "token": " light",
+     "p": 0.26
+    },
+    {
+     "token": " is",
+     "p": 0.2
+    },
+    {
+     "token": " scatters",
+     "p": 0.1
+    },
+    {
+     "token": " dominates",
+     "p": 0.07
+    }
+   ]
+  },
+  {
+   "chosen": " us",
+   "candidates": [
+    {
+     "token": " us",
+     "p": 0.31
+    },
+    {
+     "token": " our",
+     "p": 0.27
+    },
+    {
+     "token": " your",
+     "p": 0.2
+    },
+    {
+     "token": " the",
+     "p": 0.13
+    },
+    {
+     "token": " every",
+     "p": 0.04
+    }
+   ]
+  },
+  {
+   "chosen": ".",
+   "candidates": [
+    {
+     "token": ".",
+     "p": 0.52
+    },
+    {
+     "token": " from",
+     "p": 0.14
+    },
+    {
+     "token": " in",
+     "p": 0.12
+    },
+    {
+     "token": " on",
+     "p": 0.09
+    },
+    {
+     "token": " first",
+     "p": 0.04
+    }
+   ]
+  }
+ ]
+}
