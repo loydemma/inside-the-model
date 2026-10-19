@@ -26,12 +26,29 @@
         <p class="eyebrow" data-reveal>01 · Attention</p>
         <h2 data-reveal id="attention-title">Every word weighs every other word.</h2>
         <p class="lede" data-reveal>Before a model answers, each word looks at all the others and decides which ones matter. Hold one and see what it pays attention to.</p>
+        <div class="attn-controls" data-reveal>
+          <div class="sentence-pills" role="group" aria-label="Choose a sentence">
+            <button class="pill" type="button" data-sentence="0" aria-pressed="true">Trophy</button>
+            <button class="pill" type="button" data-sentence="1" aria-pressed="false">Maria &amp; Sam</button>
+            <button class="pill" type="button" data-sentence="2" aria-pressed="false">Animal</button>
+            <button class="pill" type="button" data-sentence="3" aria-pressed="false">Cat</button>
+          </div>
+          <div class="token-row" data-tokens role="group" aria-label="Words in the sentence. Focus one to see what it attends to."></div>
+        </div>
         <button class="btn deeper-btn" type="button" data-deeper="attention" aria-expanded="false">Go deeper</button>
       </div>
       <template id="deeper-attention">
         <h3>Attention</h3>
-        <p>Attention weights here come from a small open model run once, offline, on a fixed sentence.</p>
-        <p>More detail coming soon.</p>
+        <p>Inside the model, every word is a list of numbers. For each word, attention makes three versions of it: a <strong>query</strong> (what am I looking for?), a <strong>key</strong> (what do I have?) and a <strong>value</strong> (what I pass along). Each query is scored against every key, softmax turns the scores into weights that add up to 1, and the word becomes a weighted blend of the values.</p>
+        <pre><code># softmax(QKᵀ/√d)V, causal
+scores  = Q @ K.T / sqrt(d)
+scores += mask   # -inf ahead
+weights = softmax(scores)
+output  = weights @ V</code></pre>
+        <p>This is a causal model, like the ones that write text: a word can only attend to the words before it, never ahead. That is why the first word has nothing to link to, and why <code>it</code> can look back at <code>trophy</code> but <code>trophy</code> cannot see <code>big</code>.</p>
+        <p>The links show the four strongest weights for the word you hold. Real models run many attention heads across dozens of layers, each learning its own pattern; this is one head's worth.</p>
+        <p><strong>Data source:</strong> <span data-slot="source">Illustrative example.</span></p>
+        <p><strong>In production:</strong> every token is compared with every earlier token, so cost grows with the square of the prompt length. It is a big reason long prompts are slower and cost more.</p>
       </template>
     </section>
     <section id="orange" class="stage-section" aria-labelledby="orange-title">

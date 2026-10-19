@@ -55,6 +55,7 @@ body.deeper-open { overflow: hidden; }
   border-radius: 6px;
 }
 #deeper-panel code { padding: 2px 5px; }
+#deeper-panel pre code { padding: 0; background: none; }
 #deeper-panel pre { padding: 12px 14px; overflow-x: auto; }
 #deeper-panel [data-deeper-close] {
   align-self: flex-end;

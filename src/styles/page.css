@@ -170,3 +170,47 @@ a { color: inherit; }
 html.js [data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
 html.js [data-reveal].in-view { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { html.js [data-reveal] { opacity: 1; transform: none; transition: none; } }
+
+/* Attention: sentence picker and the token row that mirrors the 3D words. */
+.attn-controls { margin-top: 24px; display: flex; flex-direction: column; gap: 14px; }
+.sentence-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-soft);
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  cursor: pointer;
+}
+.pill:hover { color: var(--text); }
+.pill[aria-pressed='true'] { color: var(--stage); background: var(--text); border-color: var(--text); }
+.token-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.token {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: background 160ms ease-out, border-color 160ms ease-out, box-shadow 160ms ease-out;
+}
+.token[data-linked] {
+  background: rgba(125, 140, 255, calc(0.1 + 0.35 * var(--w, 1)));
+  box-shadow: 0 0 calc(18px * var(--w, 1)) rgba(125, 140, 255, 0.55);
+}
+.token[data-active] { background: var(--text); color: var(--stage); }
+.pill:focus-visible, .token:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+#attention-canvas { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+/* The attention field also fills the space behind the page title, so the first screen is alive. */
+.hero { position: relative; z-index: 1; }
+#attention { overflow: visible; }
+#attention::before, #attention .stage-canvas { top: -70svh; height: calc(100% + 70svh); }
