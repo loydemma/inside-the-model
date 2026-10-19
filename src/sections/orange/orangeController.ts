@@ -2,54 +2,83 @@ import type { SceneHandle } from '../../engine/sceneHost'
 import type { Deeper } from '../../ui/deeper'
 import { MAX_TOKENS } from '../../config'
 import { tokenize, type Token } from './tokenize'
-import { nearestAngle } from './nearestAngle'
 
-// What the 3D orange does with the tokens and the cut; the controller works without one.
+type Vec2 = { x: number; y: number }
+
+// What the 3D orange does; the controller works without one. `slice` takes a drag in normalized
+// device coords of the section canvas and cuts off `label`; `rest`, when given, labels the piece
+// that is left (the last token). Both return false/do nothing when the line misses the orange.
 export interface OrangeScene extends SceneHandle {
-  setTokens(tokens: Token[]): void
-  slice(angleDeg: number): void
+  setText(text: string, tokenCount: number): void
+  slice(start: Vec2, end: Vec2, label: Token, rest?: Token): boolean
+  autoSlice(label: Token, rest?: Token): Promise<void>
   reset(): void
 }
 
 const DEBOUNCE_MS = 150
 const DEFAULT_WORD = 'strawberry'
-const SWIPE_PX = 40
-// Intro beats, in ms: the whole orange holds under the question, slices (~900ms), then the
-// caption, the hint and the why lines come in one after another.
-const INTRO = { hold: 400, caption: 900, hint: 450, why: 450 }
+const DRAG_PX = 30
+// Intro beats, in ms: the whole orange holds under the question, is slashed twice (the scene's
+// own timing, ~0.6s each), then the caption, the hint and the why paragraph come in.
+const INTRO = { sceneWait: 2500, hold: 300, caption: 150, hint: 350, why: 350 }
+const AUTO_MS = 550 // a slash's length when there is no scene to wait for
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+const plural = (n: number, word: string) => (n === 1 ? word : `${word}s`)
 
 export function createOrangeController(
   root: HTMLElement,
   deeper: Deeper,
   io: typeof IntersectionObserver | undefined = globalThis.IntersectionObserver,
 ) {
-  const input = root.querySelector<HTMLInputElement>('[data-sentence-input]') as HTMLInputElement
-  const chips = root.querySelector<HTMLElement>('[data-chips]') as HTMLElement
-  const note = root.querySelector<HTMLElement>('[data-truncated]') as HTMLElement
-  const emptyNote = root.querySelector<HTMLElement>('[data-empty-note]') as HTMLElement
-  const cutButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-cut]')]
+  const $ = <T extends HTMLElement = HTMLElement>(sel: string) => root.querySelector<T>(sel) as T
+  const input = $<HTMLInputElement>('[data-sentence-input]')
+  const chips = $('[data-chips]')
+  const note = $('[data-truncated]')
+  const emptyNote = $('[data-empty-note]')
+  const letters = $('[data-letters]')
+  const lettersUnit = root.querySelector<HTMLElement>('[data-letters-unit]')
+  const chunks = $('[data-chunks]')
+  const chunksUnit = root.querySelector<HTMLElement>('[data-chunks-unit]')
+  const done = $('[data-done]')
   const stage = root.querySelector<HTMLElement>('[data-orange-stage]')
+  const canvas = root.querySelector<HTMLCanvasElement>('canvas')
   let scene: OrangeScene | null = null
+  let text = ''
   let tokens: Token[] = []
-  let cutAngle: number | null = null // the current cut, so a scene that attaches late can catch up
+  let cut = 0 // tokens cut off so far
+  let demo = false // the orange on screen is the intro's, finished; a drag starts a fresh one
+  let log: [Token, Token | undefined][] = [] // auto slices, replayed for a scene that attaches late
   let latest = 0
+  let sceneReady: () => void = () => {}
+  const sceneArrived = new Promise<void>((resolve) => { sceneReady = resolve })
 
-  async function update(text: string): Promise<void> {
+  function render(): void {
+    const n = [...text].filter((c) => !/\s/.test(c)).length
+    letters.textContent = String(n)
+    if (lettersUnit) lettersUnit.textContent = plural(n, 'letter')
+    chunks.textContent = String(cut)
+    if (chunksUnit) chunksUnit.textContent = plural(cut, 'chunk')
+    const all = tokens.length > 0 && cut === tokens.length
+    done.hidden = !all || demo
+    done.textContent = all ? `That’s all: ${cut} ${plural(cut, 'chunk')}` : ''
+  }
+
+  async function update(next: string): Promise<void> {
     const run = ++latest
-    const result = await tokenize(text.trim() ? text : '')
+    const result = await tokenize(next.trim() ? next : '')
     if (run !== latest) return // a newer keystroke already took over
+    text = next
     tokens = result.tokens
+    cut = 0
+    demo = false
+    log = []
     const empty = tokens.length === 0
     chips.replaceChildren(
       ...tokens.map((t) => {
         const chip = document.createElement('span')
         chip.className = 'chip'
-        chip.append(t.text)
-        const id = document.createElement('small')
-        id.textContent = String(t.id)
-        chip.append(id)
+        chip.textContent = t.text
         return chip
       }),
     )
@@ -57,23 +86,45 @@ export function createOrangeController(
     emptyNote.hidden = !empty
     note.hidden = !result.truncated
     note.textContent = result.truncated ? `Showing the first ${MAX_TOKENS} of ${result.total} tokens` : ''
-    cutButtons.forEach((b) => { b.disabled = empty })
     deeper.setSlot('orange', 'count', String(result.total))
-    cutAngle = null
-    if (empty) scene?.reset()
-    scene?.setTokens(tokens)
+    render()
+    scene?.setText(text, tokens.length)
+    // With no 3D there is nothing to slice, so show the answer straight away.
+    if (document.documentElement.classList.contains('no-3d')) while (sliceNext());
   }
 
-  function cut(angleDeg: number): void {
-    if (tokens.length === 0) return
-    cutAngle = angleDeg
-    scene?.slice(angleDeg)
+  // The next token comes off. Returns null once every token is off.
+  function sliceNext(): Token | null {
+    const t = tokens[cut]
+    if (!t) return null
+    cut++
+    render()
+    root.querySelector('[data-counter]')?.classList.add('is-shown')
+    return t
+  }
+
+  // The token to cut off next, and the last one when only it will be left.
+  function next(): [Token, Token | undefined] | null {
+    const t = tokens[cut]
+    if (!t) return null
+    return [t, cut === tokens.length - 2 ? tokens[cut + 1] : undefined]
+  }
+
+  async function autoCut(): Promise<void> {
+    const n = next()
+    if (!n) return
+    sliceNext()
+    if (n[1]) sliceNext()
+    log.push(n)
+    if (scene) await scene.autoSlice(...n)
+    else await wait(AUTO_MS)
   }
 
   function attach(s: OrangeScene): void {
     scene = s
-    s.setTokens(tokens)
-    if (cutAngle !== null) s.slice(cutAngle)
+    s.setText(text, tokens.length)
+    for (const n of log) void s.autoSlice(...n)
+    sceneReady()
   }
 
   // The tokenizer is a big download, so it waits until the orange is near the screen
@@ -98,16 +149,21 @@ export function createOrangeController(
     return update(DEFAULT_WORD)
   }
 
-  // The one-time Show beat on first arrival: the orange slices strawberry by itself, then the
-  // caption, the hint (with the input) and the why lines appear.
+  // The one-time Show beat on first arrival: a blade slashes strawberry twice by itself (st, raw,
+  // and berry is left), the counter lands, then the caption, the hint (with the input) and why.
   async function playIntro(): Promise<void> {
     try {
       await loadDefault()
+      demo = true
+      if (!document.documentElement.classList.contains('no-3d')) {
+        await Promise.race([sceneArrived, wait(INTRO.sceneWait)])
+      }
       await wait(INTRO.hold)
-      cut(0)
+      while (next() && demo) await autoCut()
     } catch {
       started = false // the tokenizer failed to download; the text still teaches the lesson
     }
+    render()
     await wait(INTRO.caption)
     reveal('[data-caption]')
     await wait(INTRO.hint)
@@ -116,22 +172,52 @@ export function createOrangeController(
     reveal('.why')
   }
 
-  // Reduced motion: the answered state straight away.
+  // Reduced motion: the answered state straight away (the scene snaps its slices).
   function showAnswered(): void {
-    reveal('[data-caption]', '[data-hint]', '.orange-controls', '.why')
-    loadDefault().then(() => cut(0), () => { started = false })
+    reveal('[data-counter]', '[data-caption]', '[data-hint]', '.orange-controls', '.why')
+    loadDefault().then(
+      async () => {
+        demo = true
+        while (next() && demo) await autoCut()
+        render()
+      },
+      () => { started = false },
+    )
+  }
+
+  // A drag on the orange: you choose where to cut, the tokenizer decides what comes off.
+  function dragCut(start: Vec2, end: Vec2): void {
+    const n = next()
+    if (!scene || !n) return
+    if (scene.slice(start, end, ...n)) {
+      sliceNext()
+      if (n[1]) sliceNext()
+    }
+  }
+
+  // The intro's orange is all cut; your first drag starts a fresh one to slice yourself.
+  function freshAfterDemo(): void {
+    if (!demo) return
+    demo = false
+    cut = 0
+    log = []
+    render()
+    scene?.setText(text, tokens.length)
   }
 
   let timer = 0
   input.addEventListener('input', () => {
     if (!started) return start()
     clearTimeout(timer)
-    timer = window.setTimeout(() => void update(input.value), DEBOUNCE_MS)
+    timer = window.setTimeout(() => void update(input.value).catch(() => {}), DEBOUNCE_MS)
   })
   input.addEventListener('focus', start)
-  cutButtons.forEach((b) => {
-    b.disabled = true
-    b.addEventListener('click', () => cut(Number(b.dataset.cut)))
+  // Keyboard: Enter slices the next token off along a preset line.
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    freshAfterDemo()
+    void autoCut()
   })
 
   const observer = io
@@ -139,21 +225,28 @@ export function createOrangeController(
     : null
   observer?.observe(root)
 
-  // A swipe across the orange cuts it along the nearest allowed angle. Only the stage captures
-  // touch (touch-action: none there), so the page still scrolls everywhere else.
-  let down: { x: number; y: number; id: number } | null = null
+  // Only the stage captures touch (touch-action: none there), so the page still scrolls elsewhere.
+  const ndc = (e: PointerEvent): Vec2 => {
+    const r = (canvas ?? stage!).getBoundingClientRect()
+    return { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: 1 - ((e.clientY - r.top) / r.height) * 2 }
+  }
+  let down: { x: number; y: number; id: number; at: Vec2 } | null = null
   stage?.addEventListener('pointerdown', (e) => {
-    down = { x: e.clientX, y: e.clientY, id: e.pointerId }
-    stage.setPointerCapture(e.pointerId) // so a swipe that ends off the stage still counts
+    down = { x: e.clientX, y: e.clientY, id: e.pointerId, at: ndc(e) }
+    freshAfterDemo()
+    try {
+      stage.setPointerCapture(e.pointerId) // so a drag that ends off the stage still counts
+    } catch {
+      // the pointer is already gone; the drag simply won't be captured
+    }
   })
   stage?.addEventListener('pointerup', (e) => {
     if (!down || down.id !== e.pointerId) return
-    const dx = e.clientX - down.x
-    const dy = e.clientY - down.y
+    const from = down
     down = null
-    if (Math.hypot(dx, dy) > SWIPE_PX) cut(nearestAngle(dx, dy))
+    if (Math.hypot(e.clientX - from.x, e.clientY - from.y) > DRAG_PX) dragCut(from.at, ndc(e))
   })
   stage?.addEventListener('pointercancel', () => { down = null })
 
-  return { update, cut, attach, playIntro, showAnswered }
+  return { update, sliceNext, attach, playIntro, showAnswered }
 }

@@ -34,12 +34,12 @@ test('eyebrows numbered', async ({ page }) => {
   await expect(page.locator('section.stage-section .eyebrow').first()).toHaveText(/^01 · TOKENS$/i)
 })
 
-test('every section has both why lines', async ({ page }) => {
+test('every section has one why-it-matters paragraph', async ({ page }) => {
   await page.goto('/')
   for (const id of ['orange', 'flower', 'jello', 'tube', 'rocket']) {
-    await expect(page.locator(`#${id} [data-why="you"]`)).toHaveCount(1)
-    await expect(page.locator(`#${id} [data-why="builders"]`)).toHaveCount(1)
+    await expect(page.locator(`#${id} [data-why]`)).toHaveCount(1)
   }
+  await expect(page.getByText(/For you|For builders/)).toHaveCount(0)
 })
 
 test('ending links', async ({ page }) => {

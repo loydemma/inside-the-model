@@ -126,9 +126,8 @@ a { color: inherit; }
 /* Show / Your turn / Why beats: hidden until a controller adds .is-shown (no-JS shows everything). */
 .caption { margin: 18px 0 0; font-size: clamp(17px, 1.9vw, 22px); line-height: 1.4; color: var(--text-soft); font-weight: 500; letter-spacing: -0.01em; }
 .hint { margin: 14px 0 0; font-size: 16px; line-height: 1.4; color: rgba(255, 255, 255, 0.85); font-weight: 600; }
-.why { margin-top: 24px; display: grid; gap: 8px; }
-.why p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--text-soft); }
-.why strong { color: var(--text); }
+.why { margin-top: 24px; }
+.why p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--text-soft); max-width: 52ch; }
 html.js .caption, html.js .hint, html.js .why { opacity: 0; transform: translateY(8px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
 html.js .caption.is-shown, html.js .hint.is-shown, html.js .why.is-shown { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { html.js .caption, html.js .hint, html.js .why { transition: none; transform: none; } }
@@ -187,22 +186,7 @@ html.js [data-reveal] { opacity: 0; transform: translateY(16px); transition: opa
 html.js [data-reveal].in-view { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { html.js [data-reveal] { opacity: 1; transform: none; transition: none; } }
 
-/* Pill buttons (orange cuts) */
-.pill {
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-soft);
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--rule);
-  background: transparent;
-  cursor: pointer;
-}
-.pill:hover { color: var(--text); }
-.pill:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-
-/* Orange: sentence input, token chips and cut buttons. */
+/* Orange: sentence input and token chips. */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .orange-controls { display: grid; gap: 12px; margin-top: 20px; }
 .sentence-input {
@@ -217,28 +201,33 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
 .sentence-input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-size: 15px; font-weight: 500; white-space: pre; padding: 6px 10px; border-radius: 8px; background: rgba(255, 150, 40, 0.16); }
-.chip small { margin-left: 6px; font-size: 11px; opacity: 0.6; }
 .note { margin: 0; font-size: 13px; opacity: 0.7; }
-.cut-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.cut-row .pill:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Orange opener. The canvas spans the section; the stage marks where the orange sits and is the
-   only place that captures a swipe, so the page still scrolls everywhere else. */
+   only place that captures a drag, so the page still scrolls everywhere else. Over it the cursor is
+   a knife. */
 #orange .title-block h1 { font-size: clamp(30px, 4.4vw, 54px); }
 #orange .title-block .sub { margin-top: 10px; font-size: clamp(15px, 1.6vw, 19px); }
+#orange .eyebrow { margin-top: 36px; }
 .orange-stage {
+  position: relative;
   height: clamp(250px, 38svh, 360px);
   margin: 12px calc(-1 * var(--gutter)) 0;
   touch-action: none;
-  cursor: grab;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M2 2 L20 13.5 L15.5 18.5 Z' fill='%23eef1f8' stroke='%2305060a' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M2 2 L20 13.5' stroke='%23ffffff' stroke-width='0.8'/%3E%3Cpath d='M18.6 15.6 L28.4 25.4 a2.1 2.1 0 0 1 -3 3 L15.6 18.6 Z' fill='%23262b3a' stroke='%2305060a' stroke-width='1.3' stroke-linejoin='round'/%3E%3C/svg%3E") 2 2, crosshair;
 }
-.orange-stage:active { cursor: grabbing; }
+.slash-trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .no-3d .orange-stage { display: none; }
 /* With the 3D labels showing the pieces, the chips stay for screen readers only. */
 .stage-canvas[data-ready='true'] ~ .stage-text .chips { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-html.js .orange-controls { opacity: 0; transform: translateY(8px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
-html.js .orange-controls.is-shown { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { html.js .orange-controls { transition: none; transform: none; } }
+/* Hidden beats can't be focused or clicked until they show. */
+html.js .orange-controls, html.js .counter { opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity 700ms ease-out, transform 700ms ease-out, visibility 0s linear 700ms; }
+html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visibility: visible; transform: none; transition: opacity 700ms ease-out, transform 700ms ease-out, visibility 0s; }
+@media (prefers-reduced-motion: reduce) { html.js .orange-controls, html.js .counter { transition: none; transform: none; } }
+.counter { margin: 18px 0 0; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
+.counter [data-letters], .counter [data-chunks] { color: var(--accent); font-variant-numeric: tabular-nums; }
+.done { margin: 8px 0 0; font-size: 15px; font-weight: 600; color: var(--text-soft); }
+.done[hidden] { display: none; }
 @media (min-width: 900px) {
   #orange::before { background: radial-gradient(ellipse 45% 55% at 72% 50%, var(--glow), transparent 70%); }
   #orange .stage-text { max-width: min(520px, 42vw); }

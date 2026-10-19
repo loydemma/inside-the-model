@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Inside the Model</title>
+  <script>document.documentElement.classList.add('js')</script>
   <meta name="description" content="Five surprising truths about AI, made visible: tokens, next-word guessing, temperature, context windows and agents, as interactive 3D scenes." />
   <link rel="stylesheet" href="/src/styles/tokens.css" />
   <link rel="stylesheet" href="/src/styles/page.css" />
@@ -26,23 +27,18 @@
         <h2 class="ask" id="orange-title">How many r&rsquo;s are in <em>strawberry</em>?</h2>
         <div class="orange-stage" data-orange-stage aria-hidden="true"></div>
         <p class="caption" data-caption>AI doesn&rsquo;t see letters. It sees chunks, so counting letters is surprisingly hard for it.</p>
-        <p class="hint" data-hint>Type any word or sentence, then swipe to slice.</p>
+        <p class="counter" data-counter aria-live="polite">You see <span data-letters>10</span> <span data-letters-unit>letters</span>. AI sees <span data-chunks>3</span> <span data-chunks-unit>chunks</span>.</p>
+        <p class="done" data-done hidden></p>
+        <p class="hint" data-hint>Your turn: drag across the orange to slice.</p>
         <div class="orange-controls">
-          <label class="sr-only" for="sentence-input">Word or sentence to tokenize</label>
-          <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" value="strawberry" />
+          <label class="sr-only" for="sentence-input">Word or sentence to slice (Enter slices the next chunk)</label>
+          <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" placeholder="Type any word or sentence" value="strawberry" />
           <div class="chips" data-chips aria-live="polite"></div>
           <p class="note" data-truncated hidden></p>
           <p class="note" data-empty-note hidden></p>
-          <div class="cut-row" role="group" aria-label="Cut the orange at an angle">
-            <button class="pill" type="button" data-cut="0">Cut 0°</button>
-            <button class="pill" type="button" data-cut="45">Cut 45°</button>
-            <button class="pill" type="button" data-cut="90">Cut 90°</button>
-            <button class="pill" type="button" data-cut="135">Cut 135°</button>
-          </div>
         </div>
         <div class="why">
-          <p data-why="you"><strong>For you:</strong> odd spelling, rhyming and letter-counting slips come from this.</p>
-          <p data-why="builders"><strong>For builders:</strong> tokens are what you pay for and what fills the context window; non-English text often costs more tokens.</p>
+          <p data-why>AI reads in chunks called tokens, not letters. That&rsquo;s why it can stumble on spelling or counting letters &mdash; and it&rsquo;s also how AI usage is measured and priced.</p>
         </div>
         <button class="btn deeper-btn" type="button" data-deeper="orange" aria-expanded="false">Go deeper</button>
       </div>
@@ -72,8 +68,7 @@ enc.encode("strawberry")   // [302, 1618, 19772]
           <button class="btn" type="button" data-source-btn disabled>Give it a source</button>
         </div>
         <div class="why">
-          <p data-why="you"><strong>For you:</strong> AI can sound confident while making things up, so check important facts.</p>
-          <p data-why="builders"><strong>For builders:</strong> this is why we ground models in real sources (retrieval/RAG) and ask them to cite.</p>
+          <p data-why>AI can sound confident while making things up, so check facts that matter &mdash; and it&rsquo;s why AI products connect models to real sources and ask them to cite.</p>
         </div>
         <button class="btn deeper-btn" type="button" data-deeper="flower" aria-expanded="false">Go deeper</button>
       </div>
@@ -98,8 +93,7 @@ enc.encode("strawberry")   // [302, 1618, 19772]
           <p class="answer" data-answer aria-live="polite"></p>
         </div>
         <div class="why">
-          <p data-why="you"><strong>For you:</strong> ask again for fresh ideas, and expect answers to vary.</p>
-          <p data-why="builders"><strong>For builders:</strong> turn it down for consistent product behavior, up for brainstorming.</p>
+          <p data-why>Ask again when you want fresh ideas and expect answers to vary &mdash; products turn it down when they need consistency and up for brainstorming.</p>
         </div>
         <button class="btn deeper-btn" type="button" data-deeper="jello" aria-expanded="false">Go deeper</button>
       </div>
@@ -123,8 +117,7 @@ enc.encode("strawberry")   // [302, 1618, 19772]
           <button class="btn" type="button" data-reset>Reset</button>
         </div>
         <div class="why">
-          <p data-why="you"><strong>For you:</strong> in long chats, early instructions get lost, so restate what matters or start fresh.</p>
-          <p data-why="builders"><strong>For builders:</strong> context windows are finite, so decide what stays (summaries, retrieval, pinned instructions).</p>
+          <p data-why>In long chats, early instructions can get lost, so restate what matters or start fresh &mdash; and anyone building with AI has to decide what fits in that window.</p>
         </div>
         <button class="btn deeper-btn" type="button" data-deeper="tube" aria-expanded="false">Go deeper</button>
       </div>
@@ -152,8 +145,7 @@ enc.encode("strawberry")   // [302, 1618, 19772]
           <button class="btn" type="button" data-launch>Launch</button>
         </div>
         <div class="why">
-          <p data-why="you"><strong>For you:</strong> AI agents stumble on long tasks, so check their work at key points.</p>
-          <p data-why="builders"><strong>For builders:</strong> shorten chains, add checks and retries, and keep a human in the loop for risky steps.</p>
+          <p data-why>AI agents can stumble on long tasks, so check their work at key points &mdash; which is why good agents keep steps short, add checks, and loop in a human for risky moves.</p>
         </div>
         <button class="btn deeper-btn" type="button" data-deeper="rocket" aria-expanded="false">Go deeper</button>
       </div>

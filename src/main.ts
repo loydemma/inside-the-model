@@ -7,8 +7,6 @@ import { mountWhenVisible } from './engine/sceneHost'
 import { createOrangeController } from './sections/orange/orangeController'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
-document.documentElement.classList.add('js')
-
 const q = detectQuality()
 setStatus('LOADING')
 initReveals(document, { reducedMotion: q.reducedMotion })
