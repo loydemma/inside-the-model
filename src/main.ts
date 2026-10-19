@@ -1,9 +1,11 @@
 import { detectQuality } from './engine/quality'
 import { setStatus, showFallback } from './engine/renderer'
+import { initReveals } from './engine/reveal'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
 const q = detectQuality()
 setStatus('LOADING')
+initReveals(document, { reducedMotion: q.reducedMotion })
 
 // Without GPU acceleration, live 3D freezes the page, so skip the scenes there.
 // The text works on its own.
