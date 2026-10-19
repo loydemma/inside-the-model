@@ -1,6 +1,6 @@
 import { initDeeper } from './ui/deeper'
 import { detectQuality } from './engine/quality'
-import { setStatus, showFallback } from './engine/renderer'
+import { setStatus, showFallback } from './engine/status'
 import { initReveals } from './engine/reveal'
 import { mountWhenVisible } from './engine/sceneHost'
 import { loadData, showDemoError } from './data/load'

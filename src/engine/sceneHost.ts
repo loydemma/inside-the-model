@@ -1,4 +1,4 @@
-import { showFallback } from './renderer'
+import { showFallback } from './status'
 
 export interface SceneHandle {
   start(): void
