@@ -214,3 +214,23 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
 .hero { position: relative; z-index: 1; }
 #attention { overflow: visible; }
 #attention::before, #attention .stage-canvas { top: -70svh; height: calc(100% + 70svh); }
+
+/* Orange: sentence input, token chips and cut buttons. */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.orange-controls { display: grid; gap: 12px; margin-top: 20px; }
+.sentence-input {
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+}
+.sentence-input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 15px; font-weight: 500; white-space: pre; padding: 6px 10px; border-radius: 8px; background: rgba(255, 150, 40, 0.16); }
+.chip small { margin-left: 6px; font-size: 11px; opacity: 0.6; }
+.note { margin: 0; font-size: 13px; opacity: 0.7; }
+.cut-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cut-row .pill:disabled { opacity: 0.4; cursor: not-allowed; }

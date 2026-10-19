@@ -6,6 +6,7 @@ import { mountWhenVisible } from './engine/sceneHost'
 import { loadData, showDemoError } from './data/load'
 import { parseAttention } from './data/types'
 import { createAttentionController } from './sections/attention/attentionController'
+import { createOrangeController } from './sections/orange/orangeController'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
 document.documentElement.classList.add('js')
@@ -46,3 +47,7 @@ loadData('/data/attention.json', parseAttention).then(
   },
   () => showDemoError(attentionSection),
 )
+
+// Tokenizing is real and works with no 3D, so the controller starts right away. The orange
+// scene attaches later.
+createOrangeController(document.getElementById('orange') as HTMLElement, deeper)

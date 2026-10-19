@@ -12,6 +12,7 @@
     "deploy:aws": "sst deploy --stage production"
   },
   "dependencies": {
+    "js-tiktoken": "1.0.21",
     "three": "0.186.1"
   },
   "devDependencies": {

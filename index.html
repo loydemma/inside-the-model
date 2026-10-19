@@ -57,12 +57,32 @@ output  = weights @ V</code></pre>
         <p class="eyebrow" data-reveal>02 · Tokenization</p>
         <h2 data-reveal id="orange-title">AI does not read words. It reads pieces.</h2>
         <p class="lede" data-reveal>Type a sentence and cut the orange. Each slice is one token, the chunk of text a model actually sees.</p>
+        <div class="orange-controls" data-reveal>
+          <label class="sr-only" for="sentence-input">Sentence to tokenize</label>
+          <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" value="Tokenizers don't see words, they see pieces." />
+          <div class="chips" data-chips aria-live="polite"></div>
+          <p class="note" data-truncated hidden></p>
+          <p class="note" data-hint hidden></p>
+          <div class="cut-row" role="group" aria-label="Cut the orange at an angle">
+            <button class="pill" type="button" data-cut="0">Cut 0°</button>
+            <button class="pill" type="button" data-cut="45">Cut 45°</button>
+            <button class="pill" type="button" data-cut="90">Cut 90°</button>
+            <button class="pill" type="button" data-cut="135">Cut 135°</button>
+          </div>
+        </div>
         <button class="btn deeper-btn" type="button" data-deeper="orange" aria-expanded="false">Go deeper</button>
       </div>
       <template id="deeper-orange">
         <h3>Tokenization</h3>
-        <p>Tokenization runs live in your browser with a real tokenizer.</p>
-        <p>More detail coming soon.</p>
+        <p>A model never sees letters or words. Before anything else, a tokenizer breaks your text into pieces called tokens, each one an ID from a fixed vocabulary. The vocabulary is built with <strong>byte-pair encoding</strong>: start from single bytes, then repeatedly merge the pair that appears most often in a huge pile of text. Common words end up as one piece. Rare words, names and emoji get split into several.</p>
+        <pre><code>import { Tiktoken } from 'js-tiktoken/lite'
+import o200k_base from 'js-tiktoken/ranks/o200k_base'
+
+const enc = new Tiktoken(o200k_base)
+enc.encode("hello world")   // [24912, 2375]</code></pre>
+        <p>Your sentence is <span data-slot="count">0</span> tokens long. Some pieces are only part of a character (an emoji is several bytes), so the chip shows ⟨byte⟩ instead of broken text.</p>
+        <p><strong>Data source:</strong> Real tokenizer: o200k_base (the GPT-4o tokenizer), running in your browser. The orange is only a way to show the pieces.</p>
+        <p><strong>In production:</strong> tokens are what you are billed for and what limits a model's context window. The same sentence can cost more or fewer tokens depending on the language and the words, which is why long prompts cost more and can run out of room.</p>
       </template>
     </section>
     <section id="jello" class="stage-section" aria-labelledby="jello-title">
