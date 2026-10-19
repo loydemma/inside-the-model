@@ -1,0 +1,9 @@
+node_modules
+dist
+.sst
+.env*
+test-results
+playwright-report
+.superpowers
+data-prep/.venv
+__pycache__
