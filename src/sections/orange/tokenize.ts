@@ -10,6 +10,8 @@ function getEncoder(): Promise<Encoder> {
   encoder ??= Promise.all([import('js-tiktoken/lite'), import('js-tiktoken/ranks/o200k_base')]).then(
     ([{ Tiktoken }, ranks]) => new Tiktoken(ranks.default),
   )
+  // A failed download must not stick; the next call tries again.
+  encoder.catch(() => { encoder = null })
   return encoder
 }
 

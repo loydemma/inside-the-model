@@ -12,7 +12,11 @@ export interface OrangeScene extends SceneHandle {
 
 const DEBOUNCE_MS = 150
 
-export function createOrangeController(root: HTMLElement, deeper: Deeper) {
+export function createOrangeController(
+  root: HTMLElement,
+  deeper: Deeper,
+  io: typeof IntersectionObserver | undefined = globalThis.IntersectionObserver,
+) {
   const input = root.querySelector<HTMLInputElement>('[data-sentence-input]') as HTMLInputElement
   const chips = root.querySelector<HTMLElement>('[data-chips]') as HTMLElement
   const note = root.querySelector<HTMLElement>('[data-truncated]') as HTMLElement
@@ -59,14 +63,32 @@ export function createOrangeController(root: HTMLElement, deeper: Deeper) {
     s.setTokens(tokens)
   }
 
+  // The tokenizer is a big download, so it waits until the orange is near the screen
+  // or the user touches the input, whichever comes first.
+  let started = false
+  function start(): void {
+    if (started) return
+    started = true
+    observer?.disconnect()
+    update(input.value).catch(() => { started = false }) // retry on the next focus or keystroke
+  }
+
   let timer = 0
   input.addEventListener('input', () => {
+    if (!started) return start()
     clearTimeout(timer)
     timer = window.setTimeout(() => void update(input.value), DEBOUNCE_MS)
   })
-  cutButtons.forEach((b) => b.addEventListener('click', () => cut(Number(b.dataset.cut))))
+  input.addEventListener('focus', start)
+  cutButtons.forEach((b) => {
+    b.disabled = true
+    b.addEventListener('click', () => cut(Number(b.dataset.cut)))
+  })
 
-  void update(input.value)
+  const observer = io
+    ? new io((entries) => { if (entries.some((e) => e.isIntersecting)) start() }, { rootMargin: '100% 0px' })
+    : null
+  observer?.observe(root)
 
   return { update, cut, attach }
 }

@@ -37,4 +37,20 @@ describe('orange controller', () => {
     ctl.cut(45)
     expect(scene.slice).toHaveBeenCalledWith(45)
   })
+
+  it('waits for the orange to be near the screen before loading the tokenizer', async () => {
+    let fire: (entries: unknown[]) => void = () => {}
+    const FakeIO = vi.fn(function (this: unknown, cb: (e: unknown[]) => void) {
+      fire = cb
+      return { observe: vi.fn(), disconnect: vi.fn() }
+    }) as unknown as typeof IntersectionObserver
+    document.body.innerHTML = `<section id="orange"><input data-sentence-input value="hello world" />
+      <div data-chips></div><p data-truncated hidden></p><p data-hint hidden></p><button data-cut="0"></button></section>`
+    const root = document.getElementById('orange') as HTMLElement
+    createOrangeController(root, { setSlot: vi.fn() } as unknown as Deeper, FakeIO)
+    expect(root.querySelector('[data-cut]')).toHaveProperty('disabled', true)
+    expect(root.querySelector('[data-chips]')!.children).toHaveLength(0)
+    fire([{ isIntersecting: true }])
+    await vi.waitFor(() => expect(root.querySelector('[data-chips]')!.children).toHaveLength(2))
+  })
 })
