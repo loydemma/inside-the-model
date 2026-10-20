@@ -11,6 +11,6 @@
     "types": ["vite/client", "node"],
     "noEmit": true
   },
-  "include": ["src", "tests", "e2e", "dev", "*.ts"],
+  "include": ["src", "tests", "e2e", "*.ts"],
   "exclude": ["sst.config.ts", ".sst"]
 }

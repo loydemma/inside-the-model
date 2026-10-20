@@ -83,6 +83,7 @@ export function createJelloController(root: HTMLElement, data: TemperatureData, 
 
   if (stage) {
     stage.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return // a right-click or middle-click isn't a poke
       root.classList.add('has-poked') // the "poke the jello" prompt has done its job
       const r = stage.getBoundingClientRect()
       poke((e.clientX - r.left) / (r.width || 1), (e.clientY - r.top) / (r.height || 1))

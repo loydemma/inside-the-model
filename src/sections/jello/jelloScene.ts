@@ -46,6 +46,7 @@ export async function createJelloScene(stage: HTMLElement, q: Quality): Promise<
     v.disablePictureInPicture = true
     v.setAttribute('aria-hidden', 'true')
     wobble.append(v)
+    v.load() // iOS ignores preload; start buffering now so the first poke plays at once
     return v
   })
 

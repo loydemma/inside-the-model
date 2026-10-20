@@ -397,6 +397,7 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
   let tokenCount = 0
   let cutChars = 0 // characters already cut off, to place the intro's slices
   let inkU: number[] | null = null
+  let orangeGen = 0 // bumped by every fresh orange
   const glints: { mat: MeshPhysicalMaterial; at: number }[] = []
 
   const scale = new Spring(1, 1, 50, 0.9)
@@ -477,6 +478,7 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
   }
 
   function setText(next: string, count: number): void {
+    orangeGen++ // a slash still queued for the old orange must not land on this one
     for (const p of pieces) disposePiece(p) // disposes the glinting cap materials too
     glints.length = 0
     drops.count = 0
@@ -784,8 +786,8 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
   // The intro's blade: a slash across the piece that is left, sized to the token it cuts off.
   let chain = Promise.resolve()
   const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
-  async function runAuto(label: Token, rest?: Token): Promise<void> {
-    if (!main) return
+  async function runAuto(label: Token, rest: Token | undefined, gen: number): Promise<void> {
+    if (!main || gen !== orangeGen) return
     scene.updateMatrixWorld()
     const ndcBox = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity }
     const box = new Box3().setFromObject(main.peel)
@@ -817,13 +819,15 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
       points = []
       blade = { from: toClient(start), to: toClient(end), at: performance.now() }
       await sleep(SWIPE_MS * 0.7)
+      if (gen !== orangeGen) return
     }
     slice(start, end, label, rest, true)
     if (!still) await sleep(SETTLE_MS)
   }
 
   function autoSlice(label: Token, rest?: Token): Promise<void> {
-    chain = chain.then(() => runAuto(label, rest)).catch(() => {})
+    const gen = orangeGen
+    chain = chain.then(() => runAuto(label, rest, gen)).catch(() => {})
     return chain
   }
 

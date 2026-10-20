@@ -1,6 +1,7 @@
 export function initDeeper(doc: Document) {
   const panel = doc.getElementById('deeper-panel') as HTMLElement
   const body = panel.querySelector<HTMLElement>('[data-deeper-body]') as HTMLElement
+  const closeBtn = panel.querySelector<HTMLElement>('[data-deeper-close]')
   const slots = new Map<string, string>()
   let current: string | null = null
 
@@ -26,6 +27,7 @@ export function initDeeper(doc: Document) {
     panel.classList.add('open')
     panel.setAttribute('aria-hidden', 'false')
     doc.body.classList.add('deeper-open')
+    closeBtn?.focus() // focus moves into the panel; close hands it back to the opener
   }
 
   function close(): void {
@@ -44,7 +46,7 @@ export function initDeeper(doc: Document) {
     if (current === id) applySlots(id)
   }
 
-  panel.querySelector('[data-deeper-close]')?.addEventListener('click', close)
+  closeBtn?.addEventListener('click', close)
   doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') close() })
 
   return { open, close, setSlot }

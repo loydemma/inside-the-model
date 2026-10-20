@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  test: { environment: 'jsdom', include: ['tests/**/*.test.ts'] },
+  // vmThreads makes one jsdom per worker while keeping each file isolated.
+  test: { environment: 'jsdom', include: ['tests/**/*.test.ts'], pool: 'vmThreads' },
 })

@@ -174,6 +174,9 @@ export function createOrangeController(
 
   // Reduced motion: the answered state straight away (the scene snaps its slices).
   function showAnswered(): void {
+    // The orange arrives already cut, so the hint offers a fresh one rather than the first cut.
+    const hint = root.querySelector('[data-hint]')
+    if (hint) hint.textContent = 'Your turn: drag your knife across the orange to slice a fresh one yourself.'
     reveal('[data-counter]', '[data-caption]', '[data-hint]', '.orange-controls', '.why')
     loadDefault().then(
       async () => {

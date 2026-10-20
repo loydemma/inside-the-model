@@ -30,6 +30,7 @@ describe('initDeeper', () => {
     expect(panel().querySelector('[data-deeper-body]')!.textContent).toContain('orange text')
     expect(btn('orange').getAttribute('aria-expanded')).toBe('true')
     expect(document.body.classList.contains('deeper-open')).toBe(true)
+    expect(document.activeElement).toBe(panel().querySelector('[data-deeper-close]'))
   })
 
   it('shows only the newest content when another opens', () => {
