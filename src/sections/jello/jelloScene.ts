@@ -53,7 +53,6 @@ export async function createJelloScene(stage: HTMLElement, q: Quality): Promise<
   let params: WobbleParams = wobbleParams(0)
   let stop = 0
   let active: HTMLVideoElement | null = null
-  let playFailed = false // autoplay refused (e.g. iOS Low Power Mode): the poster wobbles instead
   let pokedAt = -1e9
   let dist = 0
   let side = 0
@@ -77,12 +76,9 @@ export async function createJelloScene(stage: HTMLElement, q: Quality): Promise<
     v.currentTime = 0
     v.play().then(
       () => show(v),
-      (e: unknown) => {
-        if (e instanceof DOMException && e.name === 'NotAllowedError') {
-          playFailed = true
-          show(null)
-        }
-      },
+      // Autoplay refused (e.g. iOS Low Power Mode): the poster wobbles instead. Not sticky, since
+      // a later tap is a gesture and may be allowed to play.
+      () => show(null),
     )
   }
 
@@ -130,7 +126,7 @@ export async function createJelloScene(stage: HTMLElement, q: Quality): Promise<
       side = Math.max(-1, Math.min(1, (u - BODY.x) / 0.22))
       pokedAt = performance.now()
       const clip = videos[CLIP_FOR_STOP[stop] ?? 0]
-      if (clip && !playFailed) playClip(clip)
+      if (clip) playClip(clip)
     },
     start() {
       if (raf || q.reducedMotion) return
@@ -140,7 +136,11 @@ export async function createJelloScene(stage: HTMLElement, q: Quality): Promise<
     stop() {
       cancelAnimationFrame(raf)
       raf = 0
+      // Back to rest, so scrolling away mid-poke doesn't leave a frozen, stretched jello.
       active?.pause()
+      show(null)
+      pokedAt = -1e9
+      wobble.style.transform = ''
     },
     resize() {},
     dispose() {
