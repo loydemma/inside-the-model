@@ -26,15 +26,6 @@ export interface HallucinationData {
   grounded: { sourceCard: { title: string; text: string }; steps: GenerationStep[] };
 }
 
-export interface MemoryData {
-  source: string;
-  capacity: number;
-  instruction: string;
-  messages: string[];
-  replyRemembered: string;
-  replyForgotten: string;
-}
-
 export const GENERATION_CANDIDATES = 5;
 
 function fail(field: string, why: string): never {
@@ -112,21 +103,5 @@ export function parseHallucination(raw: unknown): HallucinationData {
       sourceCard: { title: str(card.title, 'grounded.sourceCard.title'), text: str(card.text, 'grounded.sourceCard.text') },
       steps: parseSteps(grounded.steps, 'grounded.steps', 8, 16),
     },
-  };
-}
-
-export function parseMemory(raw: unknown): MemoryData {
-  const root = obj(raw, 'memory');
-  const capacity = num(root.capacity, 'capacity');
-  if (!Number.isInteger(capacity) || capacity < 2) fail('capacity', 'must be an integer of at least 2');
-  const messages = arr(root.messages, 'messages').map((m, i) => str(m, `messages[${i}]`));
-  if (messages.length < 8 || messages.length > 12) fail('messages', 'must have 8 to 12 entries');
-  return {
-    source: str(root.source, 'source'),
-    capacity,
-    instruction: str(root.instruction, 'instruction'),
-    messages,
-    replyRemembered: str(root.replyRemembered, 'replyRemembered'),
-    replyForgotten: str(root.replyForgotten, 'replyForgotten'),
   };
 }

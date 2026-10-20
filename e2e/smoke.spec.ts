@@ -4,7 +4,7 @@ import { PORTFOLIO_URL, REPO_URL } from '../src/config'
 test('page loads hero copy', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('h1')).toContainText('Inside the Model')
-  await expect(page.getByText('Five surprising truths about AI, made visible.')).toBeVisible()
+  await expect(page.getByText('Four surprising truths about AI, made visible.')).toBeVisible()
 })
 
 test('no horizontal scroll on phone', async ({ page }) => {
@@ -23,10 +23,10 @@ test('no console errors', async ({ page }) => {
   expect(errors).toEqual([])
 })
 
-test('five sections in order', async ({ page }) => {
+test('four sections in order', async ({ page }) => {
   await page.goto('/')
   const ids = await page.locator('section.stage-section').evaluateAll((els) => els.map((e) => e.id))
-  expect(ids).toEqual(['orange', 'flower', 'jello', 'tube', 'rocket'])
+  expect(ids).toEqual(['orange', 'flower', 'jello', 'rocket'])
 })
 
 test('eyebrows numbered', async ({ page }) => {
@@ -36,7 +36,7 @@ test('eyebrows numbered', async ({ page }) => {
 
 test('every section has one why-it-matters paragraph', async ({ page }) => {
   await page.goto('/')
-  for (const id of ['orange', 'flower', 'jello', 'tube', 'rocket']) {
+  for (const id of ['orange', 'flower', 'jello', 'rocket']) {
     await expect(page.locator(`#${id} [data-why]`)).toHaveCount(1)
   }
   await expect(page.getByText(/For you|For builders/)).toHaveCount(0)

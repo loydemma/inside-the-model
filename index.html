@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <title>Inside the Model</title>
   <script>document.documentElement.classList.add('js')</script>
-  <meta name="description" content="Five surprising truths about AI, made visible: tokens, next-word guessing, temperature, context windows and agents, as interactive 3D scenes." />
+  <meta name="description" content="Four surprising truths about AI, made visible: tokens, next-word guessing, temperature and agents, as interactive 3D scenes." />
   <link rel="stylesheet" href="/src/styles/tokens.css" />
   <link rel="stylesheet" href="/src/styles/page.css" />
   <link rel="stylesheet" href="/src/styles/deeper.css" />
@@ -20,7 +20,7 @@
       <canvas id="orange-canvas" class="stage-canvas" aria-hidden="true"></canvas>
       <header class="title-block">
         <h1>Inside the Model</h1>
-        <p class="sub">Five surprising truths about AI, made visible.</p>
+        <p class="sub">Four surprising truths about AI, made visible.</p>
       </header>
       <div class="stage-text">
         <p class="eyebrow">01 · Tokens</p>
@@ -123,34 +123,11 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
       </template>
     </section>
 
-    <section id="tube" class="stage-section" aria-labelledby="tube-title">
-      <canvas id="tube-canvas" class="stage-canvas" aria-hidden="true"></canvas>
-      <div class="stage-text">
-        <p class="eyebrow">04 · Context window</p>
-        <h2 class="ask" id="tube-title">Does AI remember everything you tell it?</h2>
-        <p class="caption" data-caption>AI only sees what fits in its window. Older messages fall out.</p>
-        <p class="hint" data-hint>Tap to send another message.</p>
-        <div class="tube-controls">
-          <button class="btn" type="button" data-send>Send a message</button>
-          <button class="btn" type="button" data-reset>Reset</button>
-        </div>
-        <div class="why">
-          <p data-why>In long chats, early instructions can get lost, so restate what matters or start fresh &mdash; and anyone building with AI has to decide what fits in that window.</p>
-        </div>
-        <button class="btn deeper-btn" type="button" data-deeper="tube" aria-expanded="false">Go deeper</button>
-      </div>
-      <template id="deeper-tube">
-        <h3>Context window</h3>
-        <p>A model only reads what is inside its context window. Modern windows are large, but in very long conversations and documents, details get dropped or overlooked. Within the window, attention weighs which words matter most for the next word.</p>
-        <p><strong>Data source:</strong> Illustrative example, hand-made. The window here is deliberately tiny so you can see messages fall out.</p>
-        <p>More detail coming soon.</p>
-      </template>
-    </section>
 
     <section id="rocket" class="stage-section" aria-labelledby="rocket-title">
       <canvas id="rocket-canvas" class="stage-canvas" aria-hidden="true"></canvas>
       <div class="stage-text">
-        <p class="eyebrow">05 · Agents</p>
+        <p class="eyebrow">04 · Agents</p>
         <h2 class="ask" id="rocket-title">If each step works 95% of the time, how often does a 10-step task work?</h2>
         <p class="caption" data-caption>Every extra step multiplies the risk. AI agents run many steps.</p>
         <p class="hint" data-hint>Drag the sliders, then press Launch.</p>

@@ -133,7 +133,7 @@ html.js .caption.is-shown, html.js .hint.is-shown, html.js .why.is-shown { opaci
 @media (prefers-reduced-motion: reduce) { html.js .caption, html.js .hint, html.js .why { transition: none; transform: none; } }
 
 /* Section controls */
-.flower-controls, .tube-controls { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+.flower-controls { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
 .jello-controls, .rocket-controls { margin-top: 20px; display: grid; gap: 10px; }
 .slider-label { font-size: 14px; font-weight: 600; color: var(--text-soft); }
 .slider-label output { color: var(--text); margin-left: 6px; }
