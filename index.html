@@ -29,7 +29,7 @@
         <p class="caption" data-caption>AI doesn&rsquo;t see letters. It sees chunks, so counting letters is surprisingly hard for it.</p>
         <p class="counter" data-counter aria-live="polite">You see <span data-letters>7</span> <span data-letters-unit>letters</span>. AI sees <span data-chunks>2</span> <span data-chunks-unit>chunks</span>.</p>
         <p class="done" data-done hidden></p>
-        <p class="hint" data-hint>Your turn: drag your knife across the orange to see how many tokens the word is.</p>
+        <p class="hint" data-hint>Your turn: drag your knife across the orange to see how many chunks the word splits into.</p>
         <div class="orange-controls">
           <label class="field-label" for="sentence-input">Try your own word: replace <em>oranges</em> with anything</label>
           <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" placeholder="Type any word or sentence" value="oranges" aria-describedby="sentence-help" />
@@ -53,7 +53,7 @@ const enc = new Tiktoken(o200k_base)
 enc.encode("oranges")   // [267, 8273]
                         // "or" + "anges"
 enc.encode("orange")    // [65681], one chunk</code></pre>
-        <p>Your text is <span data-slot="count">0</span> tokens long. Because a word is a few chunks rather than a row of letters, counting its letters is hard for a model, and it has tripped models up. Some pieces are only part of a character (an emoji is several bytes), so its label shows &lang;byte&rang; instead of broken text.</p>
+        <p>Your text is <span data-slot="count">0</span> tokens long. Because a word is a few chunks rather than a row of letters, counting its letters is hard for a model. Some pieces are only part of a character (an emoji is several bytes), so that piece&rsquo;s label shows &lang;byte&rang; instead of broken text.</p>
         <p><strong>Data source:</strong> Real tokenizer: o200k_base (GPT-4o's), running in your browser. The orange is only a way to show the pieces.</p>
         <p><strong>In production:</strong> tokens are what you are billed for and what limits a model's context window. The same sentence can cost more or fewer tokens depending on the language and the words, which is why long prompts cost more and can run out of room.</p>
       </template>
@@ -93,7 +93,7 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
         <h3>Next-word guessing</h3>
         <p>A language model writes by choosing one likely next word at a time. It does not look the answer up, so a question about a book that doesn&rsquo;t exist can still get a confident, invented author.</p>
         <p><strong>Data source:</strong> Illustrative example, hand-made to match how real models behave. The words and odds are not from a real model run.</p>
-        <p>More detail coming soon.</p>
+        <p><strong>In production:</strong> products ground answers by fetching real documents and handing them to the model with the question (retrieval-augmented generation), then asking it to cite them. That cuts down on made-up answers but doesn&rsquo;t remove them, so the citations need to be checkable.</p>
       </template>
     </section>
 
@@ -105,7 +105,7 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
           <span class="hold-pill" aria-hidden="true"><span class="hold-dot"></span>Pick a temperature, then poke the jello</span>
         </div>
         <p class="caption" data-caption>A setting called temperature controls how much it gambles on less likely words.</p>
-        <p class="hint" data-hint>Drag the slider, then poke the jello.</p>
+        <p class="hint" data-hint>Your turn: drag the slider, then poke the jello.</p>
         <div class="jello-controls">
           <label class="slider-label" for="temperature-slider">Temperature <output data-temperature-value>0.0</output></label>
           <input id="temperature-slider" type="range" min="0" max="4" step="1" value="0" data-temperature-slider />
@@ -115,15 +115,15 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
           </div>
         </div>
         <div class="why">
-          <p data-why>Ask again when you want fresh ideas and expect answers to vary &mdash; products turn it down when they need consistency and up for brainstorming.</p>
+          <p data-why>Expect answers to vary, and ask again when you want fresh ideas &mdash; products turn temperature down when they need consistency and up for brainstorming.</p>
         </div>
         <button class="btn deeper-btn" type="button" data-deeper="jello" aria-expanded="false">Go deeper</button>
       </div>
       <template id="deeper-jello">
         <h3>Temperature</h3>
         <p>Temperature reshapes the model&rsquo;s odds for the next word. Near 0 it almost always takes the top choice. Higher, it gives less likely words a real chance.</p>
-        <p><strong>Data source:</strong> Illustrative example, hand-written answers at five temperatures, true to how real models behave.</p>
-        <p>More detail coming soon.</p>
+        <p><strong>Data source:</strong> Illustrative example, hand-written answers at five temperatures to match how real models behave.</p>
+        <p><strong>In production:</strong> temperature is set per task: low for extracting data, writing code and anything that must be repeatable; higher for brainstorming and creative writing.</p>
       </template>
     </section>
 
@@ -139,7 +139,7 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
           <p class="odds" data-odds aria-live="polite">60%</p>
           <p class="odds-label" data-odds-label>chance all 10 steps work</p>
         </div>
-        <p class="hint" data-hint>Drag the sliders, then press Launch.</p>
+        <p class="hint" data-hint>Your turn: drag the sliders, then press Launch.</p>
         <div class="rocket-controls">
           <label class="slider-label" for="steps-slider">Steps <output data-steps-value>10</output></label>
           <input id="steps-slider" type="range" min="1" max="20" step="1" value="10" data-steps-slider />
@@ -152,15 +152,15 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
         </div>
         <p class="caption" data-caption>Every extra step multiplies the risk. AI agents run many steps.</p>
         <div class="why">
-          <p data-why>AI agents can stumble on long tasks, so check their work at key points &mdash; which is why good agents keep steps short, add checks, and loop in a human for risky moves.</p>
+          <p data-why>AI agents can stumble on long tasks, so check their work at key points &mdash; which is why good agents use fewer steps, add checks, and loop in a human for risky moves.</p>
         </div>
         <button class="btn deeper-btn" type="button" data-deeper="rocket" aria-expanded="false">Go deeper</button>
       </div>
       <template id="deeper-rocket">
         <h3>Agents</h3>
         <p>An agent chains many model steps. If each step works with probability <em>p</em>, the whole chain works with probability <em>p</em><sup>n</sup>. At 95% a step, ten steps work about 60% of the time.</p>
-        <p><strong>Data source:</strong> Real math: odds = reliability<sup>steps</sup>, computed live. The launch failure is a real random roll.</p>
-        <p>More detail coming soon.</p>
+        <p><strong>Data source:</strong> Real math: odds = reliability<sup>steps</sup>, computed live. Each launch is a real random roll at those odds.</p>
+        <p><strong>In production:</strong> real steps aren&rsquo;t perfectly independent, so treat <em>p</em><sup>n</sup> as a rule of thumb. The levers are the same either way: fewer steps, and checks that catch and retry a failed step before the task moves on.</p>
       </template>
     </section>
 
