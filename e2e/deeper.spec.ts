@@ -9,6 +9,8 @@ test('side sheet on desktop', async ({ page }) => {
   expect(await panel.evaluate((el) => getComputedStyle(el).right)).toBe('0px')
   const box = await panel.boundingBox()
   expect(box!.width).toBeLessThanOrEqual(480.5) // sub-pixel rounding while it slides in
+  await page.mouse.click(200, 400) // a press outside the panel closes it
+  await expect(panel).not.toHaveClass(/open/)
 })
 
 test('bottom sheet on phone', async ({ page }) => {

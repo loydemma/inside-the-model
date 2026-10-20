@@ -378,6 +378,7 @@ html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition:
 #jello { background: var(--stage); } /* a backdrop for the video to screen onto */
 #jello { --mood: var(--accent); }
 #jello.has-poked .hold-pill { opacity: 0; }
+#jello .hold-pill { top: auto; bottom: -6px; } /* just under the plate */
 .jello-stage {
   position: relative;
   height: clamp(260px, 40svh, 380px);
@@ -467,6 +468,7 @@ html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition:
 @media (min-width: 900px) {
   #jello::before { background: radial-gradient(ellipse 45% 55% at 72% 50%, var(--glow), transparent 70%); }
   #jello .stage-text { max-width: min(520px, 42vw); }
+  #jello .hold-pill { top: 80%; bottom: auto; }
   #jello .jello-stage { position: absolute; top: 64px; bottom: 40px; right: 0; width: 56%; height: auto; margin: 0; }
 }
 

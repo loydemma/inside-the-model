@@ -38,7 +38,7 @@ export function initDeeper(doc: Document) {
     panel.classList.remove('open')
     panel.setAttribute('aria-hidden', 'true')
     doc.body.classList.remove('deeper-open')
-    btn?.focus()
+    btn?.focus({ preventScroll: true })
   }
 
   function setSlot(id: string, slot: string, text: string): void {
@@ -48,6 +48,12 @@ export function initDeeper(doc: Document) {
 
   closeBtn?.addEventListener('click', close)
   doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') close() })
+  // A press anywhere outside the panel closes it too (a Go deeper button opens its own instead).
+  doc.addEventListener('pointerdown', (e) => {
+    const target = e.target as Element | null
+    if (!current || !target || panel.contains(target) || target.closest('[data-deeper]')) return
+    close()
+  })
 
   return { open, close, setSlot }
 }
