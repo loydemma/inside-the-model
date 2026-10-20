@@ -8,7 +8,7 @@ test('side sheet on desktop', async ({ page }) => {
   await expect(panel).toBeVisible()
   expect(await panel.evaluate((el) => getComputedStyle(el).right)).toBe('0px')
   const box = await panel.boundingBox()
-  expect(box!.width).toBeLessThanOrEqual(480)
+  expect(box!.width).toBeLessThanOrEqual(480.5) // sub-pixel rounding while it slides in
 })
 
 test('bottom sheet on phone', async ({ page }) => {
