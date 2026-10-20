@@ -50,7 +50,7 @@ body.deeper-open { overflow: hidden; }
 #deeper-panel p { margin: 0 0 14px; }
 #deeper-panel code, #deeper-panel pre {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 13px;
+  font-size: 14px;
   background: rgba(0, 0, 0, 0.06);
   border-radius: 6px;
 }

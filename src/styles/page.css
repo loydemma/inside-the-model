@@ -29,14 +29,15 @@ a { color: inherit; }
   color: var(--text);
   padding: 11px 20px;
   border-radius: 999px;
-  border: 1px solid var(--rule);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid var(--control-edge);
+  background: rgba(154, 166, 255, 0.08);
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
 }
-.btn:hover { background: rgba(255, 255, 255, 0.12); }
-.btn:focus-visible, .home-link:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.btn:hover { border-color: var(--accent); background: rgba(154, 166, 255, 0.16); box-shadow: var(--control-glow); }
+.btn:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--control-glow); }
+.home-link:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 
 .home-link {
   position: fixed;
@@ -59,7 +60,7 @@ a { color: inherit; }
   top: 18px;
   right: var(--gutter);
   z-index: 20;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   font-weight: 700;
   padding: 6px 12px 6px 24px;
@@ -127,7 +128,7 @@ a { color: inherit; }
 .caption { margin: 18px 0 0; font-size: clamp(17px, 1.9vw, 22px); line-height: 1.4; color: var(--text-soft); font-weight: 500; letter-spacing: -0.01em; }
 .hint { margin: 14px 0 0; font-size: 16px; line-height: 1.4; color: rgba(255, 255, 255, 0.85); font-weight: 600; }
 .why { margin-top: 24px; }
-.why p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--text-soft); max-width: 52ch; }
+.why p { margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-soft); max-width: 52ch; }
 html.js .caption, html.js .hint, html.js .why { opacity: 0; transform: translateY(8px); transition: opacity 700ms ease-out, transform 700ms ease-out; }
 html.js .caption.is-shown, html.js .hint.is-shown, html.js .why.is-shown { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { html.js .caption, html.js .hint, html.js .why { transition: none; transform: none; } }
@@ -198,18 +199,18 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
   color: var(--text);
   padding: 13px 14px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.32);
+  border: 1.5px solid var(--control-edge);
   background: rgba(0, 0, 0, 0.45);
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
-  caret-color: #ff9628;
+  caret-color: var(--accent);
   cursor: text;
 }
-.sentence-input:hover { border-color: rgba(255, 255, 255, 0.5); }
-.sentence-input:focus-visible { outline: none; border-color: #ff9628; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(255, 150, 40, 0.3); }
-.field-help { margin: -4px 0 0; font-size: 13px; color: var(--text-soft); }
+.sentence-input:hover { border-color: var(--accent); }
+.sentence-input:focus-visible { outline: none; border-color: var(--accent); box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), var(--control-glow); }
+.field-help { margin: -4px 0 0; font-size: 14px; color: var(--text-soft); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-size: 15px; font-weight: 500; white-space: pre; padding: 6px 10px; border-radius: 8px; background: rgba(255, 150, 40, 0.16); }
-.note { margin: 0; font-size: 13px; opacity: 0.7; }
+.note { margin: 0; font-size: 14px; color: var(--text-soft); }
 
 /* Orange opener. The canvas spans the section; the stage marks where the orange sits and is the
    only place that captures a drag, so the page still scrolls everywhere else. Over it the cursor is
@@ -236,7 +237,7 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
 @media (prefers-reduced-motion: reduce) { html.js .orange-controls, html.js .counter { transition: none; transform: none; } }
 .counter { margin: 18px 0 0; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
 .counter [data-letters], .counter [data-chunks] { color: var(--accent); font-variant-numeric: tabular-nums; }
-.done { margin: 8px 0 0; font-size: 15px; font-weight: 600; color: var(--text-soft); }
+.done { margin: 8px 0 0; font-size: 16px; font-weight: 600; color: var(--text-soft); }
 .done[hidden] { display: none; }
 @media (min-width: 900px) {
   #orange::before { background: radial-gradient(ellipse 45% 55% at 72% 50%, var(--glow), transparent 70%); }
@@ -271,15 +272,15 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
-.chat-q { margin: 0; font-size: 15px; line-height: 1.4; color: var(--text-soft); }
+.chat-q { margin: 0; font-size: 16px; line-height: 1.4; color: var(--text-soft); }
 .chat-tag {
   display: block;
   margin-bottom: 6px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-soft);
 }
 .chat-a {
   margin: 10px 0 0;
@@ -308,7 +309,7 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
 @keyframes word-in { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
 /* The guesses: one steady panel of five fixed columns, updated in place. Each column's bar is the
    word's odds; the picked word gets a check. Nothing blurs, flashes or reflows between words. */
-.cands-label { margin: 14px 0 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); visibility: hidden; }
+.cands-label { margin: 14px 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); visibility: hidden; }
 .has-guesses .cands-label { visibility: visible; }
 .cands { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; min-height: 52px; }
 .cand {
@@ -335,7 +336,7 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
   transition: width 300ms ease-out;
 }
 .cand-word { font-size: 14px; font-weight: 600; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
-.cand-p { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-soft); }
+.cand-p { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-soft); }
 .cand[data-chosen] { border-color: var(--mood); background: var(--mood-soft); }
 .cand[data-chosen] .cand-word::after { content: ' \2713'; color: var(--mood); }
 /* "Press and hold the flower": on the stage, once it's your turn, out of the way while it grows by itself. */
@@ -376,7 +377,7 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
 }
 .source-card[hidden] { display: none; }
 .source-card p { margin: 0; }
-.source-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #9ec0ff; }
+.source-label { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #9ec0ff; }
 .source-title { margin-top: 4px !important; font-size: 14px; font-weight: 600; }
 .source-text { margin-top: 2px !important; font-size: 13.5px; line-height: 1.45; color: var(--text-soft); }
 [data-source-btn][hidden] { display: none; }

@@ -9,6 +9,9 @@
   /* One calm, faint deep-blue glow behind every section */
   --glow: rgba(60, 85, 190, 0.16);
   --accent: #9aa6ff;
+  /* Every control (buttons, the word field) wears this outline; the glow is for hover and focus only. */
+  --control-edge: var(--accent);
+  --control-glow: 0 0 0 3px rgba(154, 166, 255, 0.28), 0 0 18px rgba(154, 166, 255, 0.35);
 
   /* Frosted light glass (Go deeper) */
   --glass: rgba(246, 247, 250, 0.86);
