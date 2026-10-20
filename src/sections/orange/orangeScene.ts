@@ -332,7 +332,7 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
   drops.count = 0
   drops.frustumCulled = false
   fit.add(drops)
-  const drop = Array.from({ length: DROPS }, () => ({ p: new Vector3(), v: new Vector3(), life: 0, max: 1, r: 0.02 }))
+  const drop = Array.from({ length: DROPS }, () => ({ p: new Vector3(), v: new Vector3(), life: 1, max: 1, r: 0.02 }))
   let nextDrop = 0
 
   let pieces: Piece[] = []
