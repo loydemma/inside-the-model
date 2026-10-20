@@ -92,16 +92,19 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
     </section>
 
     <section id="jello" class="stage-section" aria-labelledby="jello-title">
-      <canvas id="jello-canvas" class="stage-canvas" aria-hidden="true"></canvas>
       <div class="stage-text">
         <p class="eyebrow">03 · Temperature</p>
         <h2 class="ask" id="jello-title">Why does AI give a different answer every time?</h2>
+        <div class="jello-stage" data-jello-stage tabindex="0" role="button" aria-label="Poke the jello (Space or Enter)"></div>
         <p class="caption" data-caption>A setting called temperature controls how much it gambles on less likely words.</p>
         <p class="hint" data-hint>Drag the slider, then poke the jello.</p>
         <div class="jello-controls">
           <label class="slider-label" for="temperature-slider">Temperature <output data-temperature-value>0.0</output></label>
           <input id="temperature-slider" type="range" min="0" max="4" step="1" value="0" data-temperature-slider />
-          <p class="answer" data-answer aria-live="polite"></p>
+          <div class="chat">
+            <p class="chat-q"><span class="chat-tag">Illustrative example</span><span data-prompt></span></p>
+            <p class="answer" data-answer aria-live="polite"></p>
+          </div>
         </div>
         <div class="why">
           <p data-why>Ask again when you want fresh ideas and expect answers to vary &mdash; products turn it down when they need consistency and up for brainstorming.</p>

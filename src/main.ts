@@ -6,8 +6,9 @@ import { onFirstArrival } from './engine/arrival'
 import { mountWhenVisible } from './engine/sceneHost'
 import { createOrangeController } from './sections/orange/orangeController'
 import { createFlowerController } from './sections/flower/flowerController'
+import { createJelloController } from './sections/jello/jelloController'
 import { loadData, showDemoError } from './data/load'
-import { parseHallucination } from './data/types'
+import { parseHallucination, parseTemperature } from './data/types'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
 const q = detectQuality()
@@ -65,9 +66,29 @@ loadData('/data/generation.json', parseHallucination).then(
   },
 )
 
+// The jello's answers are illustrative data. It is video, not 3D, so it needs no GPU.
+const jelloSection = document.getElementById('jello') as HTMLElement
+const jelloStage = jelloSection.querySelector('[data-jello-stage]') as HTMLElement
+loadData('/data/temperature.json', parseTemperature).then(
+  (data) => {
+    const jello = createJelloController(jelloSection, data, deeper)
+    onFirstArrival(jelloSection, () => (q.reducedMotion ? jello.showAnswered() : void jello.playIntro()))
+    mountWhenVisible(jelloStage, async () => {
+      const { createJelloScene } = await import('./sections/jello/jelloScene')
+      const scene = await createJelloScene(jelloStage, q)
+      jello.attach(scene)
+      return scene
+    })
+  },
+  () => {
+    showDemoError(jelloSection)
+    jelloSection.querySelectorAll('.caption, .why').forEach((el) => el.classList.add('is-shown'))
+  },
+)
+
 // Until each section's controller drives its own intro (playIntro / showAnswered), reveal the
 // caption, hint and why lines the first time the section arrives (straight away on reduced motion).
-document.querySelectorAll<HTMLElement>('section.stage-section:not(#orange):not(#flower)').forEach((section) => {
+document.querySelectorAll<HTMLElement>('section.stage-section:not(#orange):not(#flower):not(#jello)').forEach((section) => {
   const reveal = (): void => {
     section.querySelectorAll('.caption, .hint, .why').forEach((el) => el.classList.add('is-shown'))
   }

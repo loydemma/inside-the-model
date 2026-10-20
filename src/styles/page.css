@@ -372,3 +372,97 @@ html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition:
   #flower .stage-text { max-width: min(520px, 42vw); }
   #flower .flower-stage { position: absolute; top: 64px; bottom: 40px; right: 0; width: 56%; height: auto; margin: 0; }
 }
+
+/* Jello: three clips of a rainbow jello on a plate. The stage holds them and takes the pokes. */
+#jello { background: var(--stage); } /* a backdrop for the video to screen onto */
+.jello-stage {
+  position: relative;
+  height: clamp(260px, 40svh, 380px);
+  margin: 8px calc(-1 * var(--gutter)) 0;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+  border-radius: 24px;
+}
+.jello-stage:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.5); outline-offset: -8px; }
+/* Blend and mask sit on a flat wrapper (no 3D transform), so iOS doesn't draw a black box. */
+.jv-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 112%;
+  aspect-ratio: 400 / 736;
+  translate: -50% -50%;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, rgba(0, 0, 0, 0.55) 78%, transparent 98%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, rgba(0, 0, 0, 0.55) 78%, transparent 98%);
+}
+.jv-tilt, .jv-wobble { position: absolute; inset: 0; }
+.jv-wobble { will-change: transform; }
+.jv-media { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; filter: contrast(1.06); }
+.jv-clip { opacity: 0; transition: opacity 160ms linear; }
+.jv-clip.is-on { opacity: 1; }
+.jv-wobble.is-squished { animation: jv-squish 320ms ease-out; }
+@keyframes jv-squish { 35% { transform: scale(1.05, 0.93); } 100% { transform: none; } }
+/* A soft rainbow light pooled under the plate; it brightens while the jello moves. */
+.jv-glow {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: min(92%, 520px);
+  aspect-ratio: 1.6;
+  translate: -50% -50%;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 196, 92, 0.2), rgba(120, 220, 140, 0.1) 45%, rgba(110, 120, 255, 0.07) 70%, transparent);
+  opacity: calc(0.55 + var(--energy, 0) * 0.45);
+  filter: blur(22px);
+}
+@media (max-width: 899px) { .jv-card { height: 130%; translate: -50% -42%; } }
+/* A 44px thumb target, drawn as a smaller glowing dot. */
+.jello-controls input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.jello-controls input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #9aa6ff, #6ee7a8, #ffd166, #ff8a5c, #ff4f7b);
+}
+.jello-controls input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #9aa6ff, #6ee7a8, #ffd166, #ff8a5c, #ff4f7b);
+}
+.jello-controls input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 44px;
+  height: 44px;
+  margin-top: -20px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 9px, rgba(255, 255, 255, 0.18) 10px 13px, transparent 14px);
+}
+.jello-controls input[type='range']::-moz-range-thumb {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 9px, rgba(255, 255, 255, 0.18) 10px 13px, transparent 14px);
+}
+.jello-controls input[type='range']:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 22px; }
+.jello-controls .chat { margin-top: 2px; }
+.jello-controls .answer { margin-top: 8px; font-size: 16.5px; font-weight: 500; min-height: 4.4em; }
+@media (prefers-reduced-motion: reduce) { .jv-wobble.is-squished { animation-duration: 200ms; } }
+@media (min-width: 900px) {
+  #jello::before { background: radial-gradient(ellipse 45% 55% at 72% 50%, var(--glow), transparent 70%); }
+  #jello .stage-text { max-width: min(520px, 42vw); }
+  #jello .jello-stage { position: absolute; top: 64px; bottom: 40px; right: 0; width: 56%; height: auto; margin: 0; }
+}
