@@ -18,9 +18,8 @@ export interface OrangeScene extends SceneHandle {
 const DEBOUNCE_MS = 150
 const DEFAULT_WORD = 'oranges'
 const DRAG_PX = 30
-// Intro beats, in ms: the whole orange holds under the question, is slashed twice (the scene's
-// own timing, ~0.6s each), then the caption, the hint and the why paragraph come in.
-const INTRO = { sceneWait: 2500, hold: 300, caption: 150, hint: 350, why: 350 }
+// Arrival beats, in ms: the whole orange holds under the question, then the hint and the input come in.
+const INTRO = { sceneWait: 2500, hold: 300 }
 const AUTO_MS = 550 // a slash's length when there is no scene to wait for
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -104,7 +103,9 @@ export function createOrangeController(
     if (!t) return null
     cut++
     render()
+    root.classList.add('has-cut')
     root.querySelector('[data-counter]')?.classList.add('is-shown')
+    if (cut === tokens.length) reveal('[data-caption]', '.why')
     return t
   }
 
@@ -154,27 +155,21 @@ export function createOrangeController(
     return update(DEFAULT_WORD)
   }
 
-  // The one-time Show beat on first arrival: a blade slashes oranges by itself (or, and anges is
-  // left), the counter lands, then the caption, the hint (with the input) and why.
+  // On arrival: the whole orange, the knife and the instruction. Nothing is cut until the visitor
+  // slices (Emma); the counter lands on the first cut, the caption and why once the word is all cut.
   async function playIntro(): Promise<void> {
     try {
       await loadDefault()
-      demo = true
       if (!document.documentElement.classList.contains('no-3d')) {
         await Promise.race([sceneArrived, wait(INTRO.sceneWait)])
       }
-      await wait(INTRO.hold)
-      while (next() && demo) await autoCut()
     } catch {
       started = false // the tokenizer failed to download; the text still teaches the lesson
+      reveal('[data-caption]', '.why')
     }
-    render()
-    await wait(INTRO.caption)
-    reveal('[data-caption]')
-    await wait(INTRO.hint)
+    await wait(INTRO.hold)
     reveal('[data-hint]', '.orange-controls')
-    await wait(INTRO.why)
-    reveal('.why')
+    root.classList.add('is-your-turn')
   }
 
   // Reduced motion: the answered state straight away (the scene snaps its slices).

@@ -25,14 +25,17 @@
       <div class="stage-text">
         <p class="eyebrow">01 · Tokens</p>
         <h2 class="ask" id="orange-title">How many letters does AI see in <em>oranges</em>?</h2>
-        <div class="orange-stage" data-orange-stage aria-hidden="true"></div>
+        <div class="orange-stage" data-orange-stage aria-hidden="true">
+          <span class="hold-pill"><span class="hold-dot"></span>Slice the orange with your knife</span>
+        </div>
         <p class="caption" data-caption>AI doesn&rsquo;t see letters. It sees chunks, so counting letters is surprisingly hard for it.</p>
         <p class="counter" data-counter aria-live="polite">You see <span data-letters>7</span> <span data-letters-unit>letters</span>. AI sees <span data-chunks>2</span> <span data-chunks-unit>chunks</span>.</p>
         <p class="done" data-done hidden></p>
-        <p class="hint" data-hint>Your turn: drag across the orange to slice.</p>
+        <p class="hint" data-hint>Your turn: drag your knife across the orange to see how many tokens the word is.</p>
         <div class="orange-controls">
-          <label class="sr-only" for="sentence-input">Word or sentence to slice (Enter slices the next chunk)</label>
-          <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" placeholder="Type any word or sentence" value="oranges" />
+          <label class="field-label" for="sentence-input">Try your own word: replace <em>oranges</em> with anything</label>
+          <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" placeholder="Type any word or sentence" value="oranges" aria-describedby="sentence-help" />
+          <p class="field-help" id="sentence-help">The orange updates as you type. Then slice it, or press Enter to cut the next chunk.</p>
           <div class="chips" data-chips aria-live="polite"></div>
           <p class="note" data-truncated hidden></p>
           <p class="note" data-empty-note hidden></p>

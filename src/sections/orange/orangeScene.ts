@@ -234,7 +234,7 @@ function labelTexture(token: Token): { map: CanvasTexture; aspect: number } {
   g.font = font
   let x = 4
   for (const ch of text) {
-    g.fillStyle = '␣↵⇥'.includes(ch) ? 'rgba(245,245,247,0.38)' : '#f5f5f7'
+    g.fillStyle = '␣↵⇥'.includes(ch) ? 'rgba(21,22,28,0.38)' : '#15161c'
     g.fillText(ch, x, H / 2 + 3)
     x += m.measureText(ch).width
   }
@@ -368,8 +368,9 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
     map: fleshMap, color: new Color(0.82, 0.82, 0.82), roughness: 0.45, clearcoat: 0.45, clearcoatRoughness: 0.22,
     emissive: new Color('#ff8a24'), emissiveMap: fleshMap, emissiveIntensity: FLESH_GLOW,
   })
+  // The pills wear the page accent (--accent), the same blue as the chunk count, with dark ink.
   const pillMat = new MeshPhysicalMaterial({
-    color: '#161925', metalness: 0.3, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.09, iridescence: 0.15,
+    color: '#9aa6ff', emissive: new Color('#9aa6ff'), emissiveIntensity: 0.35, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.09,
   })
   const juiceMat = new MeshPhysicalMaterial({
     color: '#ffa43a', roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, emissive: new Color('#ff7a10'), emissiveIntensity: 0.35,

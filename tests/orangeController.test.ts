@@ -84,7 +84,7 @@ describe('orange controller', () => {
     await vi.waitFor(() => expect(root.querySelector('[data-chips]')!.children).toHaveLength(2))
   })
 
-  it('plays the intro: slashes oranges by itself, then reveals caption, hint and why', async () => {
+  it('waits on arrival for the visitor to slice, then reveals the counter, caption and why', async () => {
     await tokenize('warm up') // the tokenizer loads before the clock is faked
     const { root, scene, ctl } = setup()
     vi.useFakeTimers()
@@ -95,13 +95,17 @@ describe('orange controller', () => {
     } finally {
       vi.useRealTimers()
     }
+    const shown = (sel: string) => root.querySelector(sel)!.classList.contains('is-shown')
     expect(scene.setText).toHaveBeenLastCalledWith('oranges', 2)
-    const calls = vi.mocked(scene.autoSlice).mock.calls.map(([t, rest]) => [t.text, rest?.text])
-    expect(calls).toEqual([['or', 'anges']])
+    expect(scene.autoSlice).not.toHaveBeenCalled()
+    expect(shown('[data-hint]')).toBe(true)
+    for (const sel of ['[data-counter]', '[data-caption]', '.why']) expect(shown(sel)).toBe(false)
+    ctl.sliceNext()
+    expect(shown('[data-counter]')).toBe(true)
+    expect(shown('[data-caption]')).toBe(false)
+    ctl.sliceNext()
     expect(text(root, '[data-chunks]')).toBe('2')
-    for (const sel of ['[data-counter]', '[data-caption]', '[data-hint]', '.why']) {
-      expect(root.querySelector(sel)!.classList.contains('is-shown')).toBe(true)
-    }
+    for (const sel of ['[data-caption]', '.why']) expect(shown(sel)).toBe(true)
   })
 
   it('shows the answered state straight away on reduced motion', async () => {

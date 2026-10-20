@@ -189,23 +189,33 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
 /* Orange: sentence input and token chips. */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .orange-controls { display: grid; gap: 12px; margin-top: 20px; }
+/* A text field, not a button: a visible label, square corners, a recessed fill and a text cursor. */
+.field-label { font-size: 14px; font-weight: 600; color: var(--text-soft); margin-bottom: -6px; }
+.field-label em { font-style: normal; color: var(--accent); }
 .sentence-input {
   font: inherit;
-  font-size: 16px;
+  font-size: 18px;
   color: var(--text);
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.05);
+  padding: 13px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  caret-color: #ff9628;
+  cursor: text;
 }
-.sentence-input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.sentence-input:hover { border-color: rgba(255, 255, 255, 0.5); }
+.sentence-input:focus-visible { outline: none; border-color: #ff9628; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(255, 150, 40, 0.3); }
+.field-help { margin: -4px 0 0; font-size: 13px; color: var(--text-soft); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-size: 15px; font-weight: 500; white-space: pre; padding: 6px 10px; border-radius: 8px; background: rgba(255, 150, 40, 0.16); }
 .note { margin: 0; font-size: 13px; opacity: 0.7; }
 
 /* Orange opener. The canvas spans the section; the stage marks where the orange sits and is the
    only place that captures a drag, so the page still scrolls everywhere else. Over it the cursor is
-   a knife. */
+   a chef's knife. */
+#orange { --mood: #ff9628; }
+#orange.has-cut .hold-pill { opacity: 0; }
 #orange .title-block h1 { font-size: clamp(30px, 4.4vw, 54px); }
 #orange .title-block .sub { margin-top: 10px; font-size: clamp(15px, 1.6vw, 19px); }
 #orange .eyebrow { margin-top: 36px; }
@@ -214,7 +224,7 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
   height: clamp(250px, 38svh, 360px);
   margin: 12px calc(-1 * var(--gutter)) 0;
   touch-action: none;
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M2 2 L20 13.5 L15.5 18.5 Z' fill='%23eef1f8' stroke='%2305060a' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M2 2 L20 13.5' stroke='%23ffffff' stroke-width='0.8'/%3E%3Cpath d='M18.6 15.6 L28.4 25.4 a2.1 2.1 0 0 1 -3 3 L15.6 18.6 Z' fill='%23262b3a' stroke='%2305060a' stroke-width='1.3' stroke-linejoin='round'/%3E%3C/svg%3E") 2 2, crosshair;
+  cursor: url('../sections/orange/knife.png') 1 87, crosshair; /* Emma's santoku photo; hotspot on the tip */
 }
 .slash-trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .no-3d .orange-stage { display: none; }
@@ -231,7 +241,8 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
 @media (min-width: 900px) {
   #orange::before { background: radial-gradient(ellipse 45% 55% at 72% 50%, var(--glow), transparent 70%); }
   #orange .stage-text { max-width: min(520px, 42vw); }
-  #orange .orange-stage { position: absolute; top: 64px; bottom: 40px; right: 0; width: 56%; height: auto; margin: 0; }
+  /* Never taller than the screen, so the token pills under the pieces stay in view. */
+  #orange .orange-stage { position: absolute; top: 64px; right: 0; width: 56%; height: min(calc(100% - 104px), calc(100svh - 104px)); margin: 0; }
 }
 
 /* Flower: the answer grows one word (one petal) at a time. Like the orange, the canvas spans the
