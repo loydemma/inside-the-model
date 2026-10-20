@@ -234,9 +234,9 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
   #orange .orange-stage { position: absolute; top: 64px; bottom: 40px; right: 0; width: 56%; height: auto; margin: 0; }
 }
 
-/* Flower: the answer grows one word at a time while a video of a bud unfurls with it. The stage
-   holds the video and is the only place that captures a hold. */
-#flower { --mood: #ff7aa2; --mood-soft: rgba(255, 122, 162, 0.16); background: var(--stage); } /* a backdrop for the video to screen onto */
+/* Flower: the answer grows one word (one petal) at a time. Like the orange, the canvas spans the
+   section and the stage marks where the flower sits; it is the only place that captures a hold. */
+#flower { --mood: #ff7aa2; --mood-soft: rgba(255, 122, 162, 0.16); }
 #flower[data-mood='grounded'] { --mood: #9ec0ff; --mood-soft: rgba(158, 192, 255, 0.16); }
 .flower-stage {
   position: relative;
@@ -250,42 +250,7 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
   border-radius: 24px;
 }
 .flower-stage:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.5); outline-offset: -8px; }
-/* The video's black screens away into the stage and its edges feather out, so there is no box. */
-.fv-card {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  height: 100%;
-  aspect-ratio: 2 / 3;
-  translate: -50% -50%;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  -webkit-mask-image: radial-gradient(ellipse 46% 50% at 50% 45%, #000 36%, rgba(0, 0, 0, 0.5) 64%, rgba(0, 0, 0, 0.1) 84%, transparent 96%);
-  mask-image: radial-gradient(ellipse 46% 50% at 50% 45%, #000 36%, rgba(0, 0, 0, 0.5) 64%, rgba(0, 0, 0, 0.1) 84%, transparent 96%);
-}
-/* A touch of contrast crushes the clip's not-quite-black to true black, so only the flower screens through. */
-.fv-media { display: block; width: 100%; height: 100%; object-fit: cover; filter: contrast(1.08); }
-@media (max-width: 899px) { .fv-card { height: 128%; translate: -50% -41%; } }
-/* Grounded: the same bloom, recolored a calm blue (luminance kept, so leaves stay quiet). */
-.fv-tint {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: color;
-  background: radial-gradient(ellipse 40% 34% at 50% 44%, #bfe6ff, #5f86e8 70%, #3e5fc0);
-  opacity: 0;
-  transition: opacity 900ms ease-out;
-}
-[data-flower-mood='grounded'] .fv-tint { opacity: 1; }
-.fv-glow {
-  position: absolute;
-  inset: 4% 10%;
-  pointer-events: none;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--mood) 26%, transparent), color-mix(in srgb, var(--mood) 8%, transparent) 55%, transparent);
-  opacity: calc(0.3 + var(--held, 0) * 0.7);
-  filter: blur(18px);
-  transition: background 900ms;
-}
+.no-3d .flower-stage { display: none; }
 .chat {
   margin-top: 16px;
   padding: 16px 18px 14px;
