@@ -5,6 +5,9 @@ import { initReveals } from './engine/reveal'
 import { onFirstArrival } from './engine/arrival'
 import { mountWhenVisible } from './engine/sceneHost'
 import { createOrangeController } from './sections/orange/orangeController'
+import { createFlowerController } from './sections/flower/flowerController'
+import { loadData, showDemoError } from './data/load'
+import { parseHallucination } from './data/types'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
 const q = detectQuality()
@@ -41,9 +44,31 @@ if (!q.software) {
   })
 }
 
+// The flower's words and odds are illustrative data; the scene attaches when it scrolls near.
+const flowerSection = document.getElementById('flower') as HTMLElement
+const flowerCanvas = document.getElementById('flower-canvas') as HTMLCanvasElement
+loadData('/data/generation.json', parseHallucination).then(
+  (data) => {
+    const flower = createFlowerController(flowerSection, data, deeper)
+    onFirstArrival(flowerSection, () => (q.reducedMotion ? flower.showAnswered() : void flower.playIntro()))
+    if (!q.software) {
+      mountWhenVisible(flowerCanvas, async () => {
+        const { createFlowerScene } = await import('./sections/flower/flowerScene')
+        const scene = await createFlowerScene(flowerCanvas, q)
+        flower.attach(scene)
+        return scene
+      })
+    }
+  },
+  () => {
+    showDemoError(flowerSection)
+    flowerSection.querySelectorAll('.caption, .why').forEach((el) => el.classList.add('is-shown'))
+  },
+)
+
 // Until each section's controller drives its own intro (playIntro / showAnswered), reveal the
 // caption, hint and why lines the first time the section arrives (straight away on reduced motion).
-document.querySelectorAll<HTMLElement>('section.stage-section:not(#orange)').forEach((section) => {
+document.querySelectorAll<HTMLElement>('section.stage-section:not(#orange):not(#flower)').forEach((section) => {
   const reveal = (): void => {
     section.querySelectorAll('.caption, .hint, .why').forEach((el) => el.classList.add('is-shown'))
   }
