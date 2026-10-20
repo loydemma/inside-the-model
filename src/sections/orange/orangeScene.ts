@@ -14,6 +14,7 @@ import type { OrangeScene } from './orangeController'
 import type { Token } from './tokenize'
 import { splitConvex } from './splitConvex'
 import fleshUrl from './orange-flesh.jpg'
+import peelUrl from './orange-peel.jpg'
 
 const STAGE = '#05060a' // matches --stage, so the canvas edge disappears into the page
 const GLOW = '#121a44'
@@ -142,6 +143,22 @@ function peelTextures(W: number): { base: HTMLCanvasElement; map: CanvasTexture;
   const bump = new CanvasTexture(bc)
   for (const t of [map, bump]) { t.wrapS = RepeatWrapping; t.anisotropy = 8 }
   return { base: cc, map, bump }
+}
+
+// Mirror-tiles the peel photo over the drawn peel for real pore detail; mirroring hides its seams.
+function overlayPeel(base: HTMLCanvasElement, img: HTMLImageElement): void {
+  const g = base.getContext('2d')!
+  const T = base.width / 8
+  g.save()
+  g.globalCompositeOperation = 'overlay'
+  g.globalAlpha = 0.5
+  for (let i = 0; i * T < base.width; i++) {
+    for (let j = 0; j * T < base.height; j++) {
+      g.setTransform(i % 2 ? -1 : 1, 0, 0, j % 2 ? -1 : 1, (i + (i % 2)) * T, (j + (j % 2)) * T)
+      g.drawImage(img, 0, 0, T, T)
+    }
+  }
+  g.restore()
 }
 
 // The word, inked on the side of the orange that faces the camera (u = 0.25 on a SphereGeometry).
@@ -303,6 +320,13 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
   scene.add(key, fill, rimWarm, rimCool)
 
   const peelTex = peelTextures(high ? 2048 : 1024)
+  // Real peel detail (Grok Imagine photo) arrives after the drawn peel; re-ink the word on top.
+  const peelPhoto = new Image()
+  peelPhoto.onload = () => {
+    overlayPeel(peelTex.base, peelPhoto)
+    inkU = inkText(peelTex.map, peelTex.base, text)
+  }
+  peelPhoto.src = peelUrl
   const fleshMap = fleshTexture()
   const peelMat = new MeshPhysicalMaterial({
     map: peelTex.map, bumpMap: peelTex.bump, bumpScale: 0.9, roughness: 0.42,
