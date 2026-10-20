@@ -1,8 +1,8 @@
 import {
   BackSide, Box3, CanvasTexture, CapsuleGeometry, Color, DirectionalLight, DynamicDrawUsage, Group, InstancedMesh,
   Matrix4, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, NeutralToneMapping, PerspectiveCamera, Plane, PlaneGeometry,
-  PMREMGenerator, Quaternion, RenderPipeline, RepeatWrapping, Scene, SphereGeometry, SRGBColorSpace, Vector3,
-  type BufferGeometry,
+  PMREMGenerator, Quaternion, RenderPipeline, RepeatWrapping, Scene, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3,
+  type BufferGeometry, type Texture,
 } from 'three/webgpu'
 import { color, mix, pass, screenUV, smoothstep, uniform, vec2 } from 'three/tsl'
 import { bloom } from 'three/addons/tsl/display/BloomNode.js'
@@ -13,6 +13,7 @@ import type { Quality } from '../../engine/quality'
 import type { OrangeScene } from './orangeController'
 import type { Token } from './tokenize'
 import { splitConvex } from './splitConvex'
+import fleshUrl from './orange-flesh.jpg'
 
 const STAGE = '#05060a' // matches --stage, so the canvas edge disappears into the page
 const GLOW = '#121a44'
@@ -190,53 +191,9 @@ function inkText(map: CanvasTexture, base: HTMLCanvasElement, text: string): num
   return null
 }
 
-// The cut face: peel rim, white pith, eleven juicy segments with membranes and juice sacs.
-function fleshTexture(S: number): CanvasTexture {
-  const [c, g] = canvas2d(S, S)
-  const rng = rand(3)
-  const cx = S / 2
-  const R0 = S / 2
-  const disc = (r: number, fill: string | CanvasGradient) => {
-    g.beginPath()
-    g.arc(cx, cx, r * R0, 0, Math.PI * 2)
-    g.fillStyle = fill
-    g.fill()
-  }
-  disc(1, '#e2700e')
-  disc(0.95, '#f6e3c2')
-  const SEG = 11
-  const flesh = g.createRadialGradient(cx, cx, R0 * 0.1, cx, cx, R0 * 0.88)
-  flesh.addColorStop(0, '#ffc15a')
-  flesh.addColorStop(0.55, '#f9a033')
-  flesh.addColorStop(1, '#ef8719')
-  disc(0.885, '#f3d9a8')
-  for (let s = 0; s < SEG; s++) {
-    const a0 = (s / SEG) * Math.PI * 2 + 0.035
-    const a1 = ((s + 1) / SEG) * Math.PI * 2 - 0.035
-    g.beginPath()
-    g.moveTo(cx + Math.cos((a0 + a1) / 2) * R0 * 0.13, cx + Math.sin((a0 + a1) / 2) * R0 * 0.13)
-    g.arc(cx, cx, R0 * 0.865, a0, a1)
-    g.closePath()
-    g.fillStyle = flesh
-    g.fill()
-  }
-  // Juice sacs: small radial teardrops, lighter and darker.
-  g.save()
-  for (let i = 0; i < S * 5; i++) {
-    const a = rng() * Math.PI * 2
-    const local = (a / (Math.PI * 2)) * SEG
-    if (Math.abs(local - Math.round(local)) < 0.06) continue
-    const r = (0.16 + rng() * 0.68) * R0
-    g.setTransform(1, 0, 0, 1, cx + Math.cos(a) * r, cx + Math.sin(a) * r)
-    g.rotate(a)
-    g.beginPath()
-    g.ellipse(0, 0, R0 * (0.03 + rng() * 0.03), R0 * (0.007 + rng() * 0.006), 0, 0, Math.PI * 2)
-    g.fillStyle = rng() < 0.6 ? 'rgba(255,214,140,0.38)' : 'rgba(214,100,10,0.32)'
-    g.fill()
-  }
-  g.restore()
-  disc(0.12, '#f8e8c8')
-  const map = new CanvasTexture(c)
+// The cut face: a photo of an orange cross-section, cropped so its rind fills the square (Grok Imagine).
+function fleshTexture(): Texture {
+  const map = new TextureLoader().load(fleshUrl)
   map.colorSpace = SRGBColorSpace
   map.anisotropy = 8
   return map
@@ -346,7 +303,7 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
   scene.add(key, fill, rimWarm, rimCool)
 
   const peelTex = peelTextures(high ? 2048 : 1024)
-  const fleshMap = fleshTexture(high ? 1024 : 512)
+  const fleshMap = fleshTexture()
   const peelMat = new MeshPhysicalMaterial({
     map: peelTex.map, bumpMap: peelTex.bump, bumpScale: 0.9, roughness: 0.42,
     clearcoat: 0.55, clearcoatRoughness: 0.32, sheen: 0.3, sheenColor: new Color('#ffb066'), sheenRoughness: 0.6,
