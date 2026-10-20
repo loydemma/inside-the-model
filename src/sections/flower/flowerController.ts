@@ -3,23 +3,24 @@ import type { HallucinationData, GenerationStep } from '../../data/types'
 import type { Deeper } from '../../ui/deeper'
 import { createGrowth, STEP_MS, type GrowthEvent } from './growth'
 
-const INTRO_PACE = STEP_MS / 290 // ~290ms a word
 const CALM_PACE = STEP_MS / 850 // ~850ms a word
 
-// What the 3D flower does; the controller works without one. One petal per word of the answer.
+// What the 3D flower does; the controller works without one. One petal per word of the answer;
+// `front` is the petal to turn toward the viewer (the invented word's).
 export interface FlowerScene extends SceneHandle {
-  setPetalCount(n: number): void
+  setPetalCount(n: number, front?: number): void
   openPetal(i: number, invented?: boolean): void
   setHoldProgress(p: number): void
   setMood(m: 'guess' | 'grounded'): void
-  reset(): void
 }
 
 type Run = 'ungrounded' | 'grounded'
 
 const FRAME_MS = 16
-// Intro beats, in ms: wait for the flower (briefly), a breath, then it grows by itself.
-const INTRO = { sceneWait: 2500, hold: 300, hint: 350, why: 350 }
+// Arrival beats, in ms: a breath before the hint; after the answer, the source button, then why.
+const INTRO = { hold: 300, hint: 350, why: 350 }
+// A finished answer stays put for a quick tap; only a real hold asks again.
+const RESTART_MS = 250
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 const pct = (p: number) => (p >= 0.01 ? `${Math.round(p * 100)}%` : '<1%')
@@ -32,25 +33,36 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
   const candidates = $('[data-candidates]')
   const sourceCard = $('[data-source-card]')
   const sourceBtn = $<HTMLButtonElement>('[data-source-btn]')
+  const hint = root.querySelector<HTMLElement>('[data-hint]')
+  const announce = root.querySelector<HTMLElement>('[data-announce]')
   const stage = root.querySelector<HTMLElement>('[data-flower-stage]')
   const question = root.querySelector<HTMLElement>('[data-question]')
   if (question) question.textContent = data.question
   root.querySelector('[data-source-title]')?.replaceChildren(data.grounded.sourceCard.title)
   root.querySelector('[data-source-text]')?.replaceChildren(data.grounded.sourceCard.text)
+  // The hint follows the answer: how to grow it, then the source button, then how to ask again.
+  const HINTS = {
+    start: hint?.textContent ?? '',
+    source: 'Now choose “Give it a source” and watch the answer change.',
+    again: 'Hold the flower to ask again, without a source.',
+  }
 
   let scene: FlowerScene | null = null
+  let failed = false // the 3D flower couldn't start
   let run: Run = 'ungrounded'
   let steps: GenerationStep[] = data.ungrounded.steps
   let growth = createGrowth(steps.length)
   let committed = 0
   let finished = false
   let holding = false
-  let auto = false // the intro and the grounded answer grow by themselves
-  let demo = false // the answer on screen is the intro's; a hold grows a fresh one
+  let yourTurn = false
+  let auto = false // the grounded answer (or a screen reader's activation) grows by itself
+  let demo = false // the answer on screen is the reduced-motion one; a hold grows a fresh one
   let looping = false
+  let restart = 0
   let waiters: { test: () => boolean; resolve: () => void }[] = []
-  let sceneReady: () => void = () => {}
-  const sceneArrived = new Promise<void>((resolve) => { sceneReady = resolve })
+
+  const noFlower = () => failed || document.documentElement.classList.contains('no-3d')
 
   function reveal(...selectors: string[]): void {
     for (const sel of selectors) root.querySelectorAll(sel).forEach((el) => el.classList.add('is-shown'))
@@ -59,6 +71,12 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
   function until(test: () => boolean): Promise<void> {
     if (test()) return Promise.resolve()
     return new Promise((resolve) => waiters.push({ test, resolve }))
+  }
+
+  function setHint(text: string): void {
+    if (!hint) return
+    hint.textContent = text
+    hint.hidden = text === ''
   }
 
   // Five fixed slots, updated in place, so the guesses read as one steady panel rather than chips
@@ -88,10 +106,14 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     root.classList.add('has-guesses')
   }
 
+  function choose(step: number): void {
+    const s = steps[step]!
+    candidates.querySelectorAll<HTMLElement>('.cand')[s.candidates.findIndex((c) => c.token === s.chosen)]?.setAttribute('data-chosen', '')
+  }
+
   function commit(step: number): void {
     const s = steps[step]!
-    const chosen = candidates.querySelectorAll<HTMLElement>('.cand')[s.candidates.findIndex((c) => c.token === s.chosen)]
-    chosen?.setAttribute('data-chosen', '')
+    choose(step)
     if (step > 0 && !glued(s.chosen)) response.append(' ')
     const word = document.createElement('span')
     word.className = 'word'
@@ -110,7 +132,11 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
       finished = true
       setAuto(false)
       root.classList.remove('is-growing')
+      root.classList.add('is-answered')
       if (run === 'ungrounded') sourceBtn.hidden = false
+      setHint(run === 'ungrounded' ? HINTS.source : noFlower() ? '' : HINTS.again)
+      // One announcement for the whole answer, not one per word.
+      if (announce) announce.textContent = response.textContent ?? ''
     }
   }
 
@@ -133,9 +159,7 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
       await wait(FRAME_MS)
       // Real elapsed time, so a busy or throttled page doesn't slow the answer down.
       const now = Date.now()
-      // The intro hurries so the invented author lands within ~3s; your own answers grow at a readable pace.
-      const pace = auto && run === 'ungrounded' ? INTRO_PACE : CALM_PACE
-      frame(Math.min(now - last, 100) * pace)
+      frame(Math.min(now - last, 100) * CALM_PACE)
       last = now
     }
     looping = false
@@ -150,22 +174,25 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     demo = false
     response.replaceChildren()
     candidates.replaceChildren()
-    root.classList.remove('has-guesses')
+    root.classList.remove('has-guesses', 'is-answered')
     sourceCard.hidden = next !== 'grounded'
     sourceBtn.hidden = true
     root.dataset.mood = next === 'grounded' ? 'grounded' : 'guess'
     root.classList.add('is-growing')
+    setHint(next === 'grounded' ? '' : HINTS.start)
+    if (announce) announce.textContent = ''
     syncScene()
   }
 
   function syncScene(): void {
     if (!scene) return
     scene.setMood(run === 'grounded' ? 'grounded' : 'guess')
-    scene.setPetalCount(steps.length)
+    const invented = run === 'ungrounded' ? steps.findIndex((s) => s.invented) : -1
+    scene.setPetalCount(steps.length, invented >= 0 ? invented : undefined)
     for (let i = 0; i < committed; i++) scene.openPetal(i, steps[i]!.invented === true && run === 'ungrounded')
   }
 
-  // While the flower grows by itself (intro, grounded answer), the "press and hold" pill steps aside.
+  // While the flower grows by itself, the "press and hold" pill steps aside.
   function setAuto(on: boolean): void {
     auto = on
     root.classList.toggle('is-auto', on)
@@ -173,23 +200,52 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
 
   function attach(s: FlowerScene): void {
     scene = s
+    root.classList.add('has-flower') // the pill waits for the flower it points at
     syncScene()
-    sceneReady()
   }
 
-  // Press and hold grows the answer; releasing pauses it. After a finished answer (or the intro's),
-  // a new hold grows a fresh, unsourced one.
+  // The 3D flower couldn't start: unless the visitor is already growing an answer, show the
+  // answered state, so the lesson still reads in text.
+  function fail(): void {
+    failed = true
+    root.classList.add('no-flower')
+    if (yourTurn && committed === 0 && !holding && !auto) showAnswered()
+  }
+
+  // Press and hold grows the answer; releasing pauses it. After a finished answer, a real hold (not
+  // a quick tap) grows a fresh, unsourced one.
   function hold(on: boolean): void {
-    if (on && (auto || holding)) return
-    if (!on) { holding = false; root.classList.remove('is-holding'); return }
-    if (finished || demo) begin('ungrounded')
+    if (!on) {
+      clearTimeout(restart)
+      holding = false
+      root.classList.remove('is-holding')
+      return
+    }
+    if (!yourTurn || auto || holding) return
     holding = true
     root.classList.add('is-holding')
+    if (finished || demo) {
+      restart = window.setTimeout(() => {
+        if (!holding) return
+        begin('ungrounded')
+        void loop()
+      }, RESTART_MS)
+      return
+    }
+    void loop()
+  }
+
+  // A screen reader or switch activates the flower with a bare click: the answer grows by itself.
+  function activate(): void {
+    if (!yourTurn || auto || holding) return
+    if (finished || demo) begin('ungrounded')
+    setAuto(true)
     void loop()
   }
 
   // "Give it a source": the flower regrows, cooler, with the source card beside it, by itself.
   function groundIt(): void {
+    clearTimeout(restart)
     holding = false
     root.classList.remove('is-holding')
     begin('grounded')
@@ -197,25 +253,16 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     void loop()
   }
 
-  function reset(): void {
-    holding = false
-    root.classList.remove('is-holding')
-    setAuto(false)
-    begin('ungrounded')
-    root.classList.remove('is-growing')
-  }
-
   // On arrival: the question, a closed bud and "press and hold". The visitor's own hold grows the
   // answer about a book that doesn't exist; the caption lands right after the invented author, then
-  // the source button and why once it's done.
+  // the source button and why once it's done. With no 3D flower, the answered state instead.
   async function playIntro(): Promise<void> {
-    if (!document.documentElement.classList.contains('no-3d')) {
-      await Promise.race([sceneArrived, wait(INTRO.sceneWait)])
-    }
+    if (noFlower()) return showAnswered()
     await wait(INTRO.hold)
-    // A closed bud and the instruction; nothing grows until the visitor holds the flower (Emma).
+    if (noFlower()) return showAnswered() // it failed to start meanwhile
     begin('ungrounded')
     reveal('[data-hint]')
+    yourTurn = true
     root.classList.add('is-your-turn')
     const invented = steps.findIndex((s) => s.invented)
     await until(() => committed > invented || run !== 'ungrounded')
@@ -227,29 +274,55 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     reveal('.why')
   }
 
-  // Reduced motion: the full, invented answer straight away.
+  // Reduced motion (or no 3D flower): the full, invented answer straight away.
   function showAnswered(): void {
+    clearTimeout(restart)
+    holding = false
     begin('ungrounded')
     setAuto(true)
     while (!finished) frame(STEP_MS)
     const invented = steps.findIndex((s) => s.invented)
     showCandidates(invented)
-    candidates.querySelectorAll('.cand')[steps[invented]!.candidates.findIndex((c) => c.token === steps[invented]!.chosen)]?.setAttribute('data-chosen', '')
+    choose(invented)
     demo = true
     reveal('[data-caption]', '[data-hint]', '.flower-controls', '.why')
+    yourTurn = true
     root.classList.add('is-your-turn')
   }
 
   sourceBtn.addEventListener('click', groundIt)
 
-  // Only the stage captures touch (touch-action: none there), so the page still scrolls elsewhere.
+  // A hold only counts while the flower is on screen and the page has focus.
+  const release = () => hold(false)
+  if (typeof IntersectionObserver !== 'undefined') {
+    new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.intersectionRatio < 0.25)) release()
+    }, { threshold: [0, 0.25] }).observe(root)
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) release() })
+  window.addEventListener('blur', release)
+
+  // The stage lets a vertical swipe scroll the page (touch-action: pan-y); the browser then cancels
+  // the pointer, which lets go of the hold.
   if (stage) {
+    let pointer: number | null = null
+    let captured = false
     stage.addEventListener('pointerdown', (e) => {
-      try { stage.setPointerCapture(e.pointerId) } catch { /* pointer already gone */ }
+      if (e.button !== 0 || pointer !== null) return // the primary button, one pointer at a time
+      pointer = e.pointerId
+      try { stage.setPointerCapture(e.pointerId); captured = true } catch { captured = false }
       hold(true)
     })
-    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) stage.addEventListener(type, () => hold(false))
+    const up = (e: PointerEvent) => {
+      if (e.pointerId !== pointer) return
+      pointer = null
+      hold(false)
+    }
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) stage.addEventListener(type, up)
+    stage.addEventListener('pointerleave', (e) => { if (!captured) up(e) })
+    stage.addEventListener('click', (e) => { if (e.detail === 0) activate() })
     stage.addEventListener('contextmenu', (e) => e.preventDefault())
+    stage.addEventListener('selectstart', (e) => e.preventDefault())
     const key = (e: KeyboardEvent) => e.key === ' ' || e.key === 'Enter'
     stage.addEventListener('keydown', (e) => {
       if (!key(e)) return
@@ -257,8 +330,8 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
       if (!e.repeat) hold(true)
     })
     stage.addEventListener('keyup', (e) => { if (key(e)) hold(false) })
-    stage.addEventListener('blur', () => hold(false))
+    stage.addEventListener('blur', release)
   }
 
-  return { hold, frame, groundIt, reset, playIntro, showAnswered, attach }
+  return { hold, frame, groundIt, playIntro, showAnswered, attach, fail }
 }

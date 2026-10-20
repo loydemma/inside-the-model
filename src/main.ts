@@ -54,10 +54,15 @@ loadData('/data/generation.json', parseHallucination).then(
     onFirstArrival(flowerSection, () => (q.reducedMotion ? flower.showAnswered() : void flower.playIntro()))
     if (!q.software) {
       mountWhenVisible(flowerCanvas, async () => {
-        const { createFlowerScene } = await import('./sections/flower/flowerScene')
-        const scene = await createFlowerScene(flowerCanvas, q)
-        flower.attach(scene)
-        return scene
+        try {
+          const { createFlowerScene } = await import('./sections/flower/flowerScene')
+          const scene = await createFlowerScene(flowerCanvas, q)
+          flower.attach(scene)
+          return scene
+        } catch (err) {
+          flower.fail() // the lesson still reads in text
+          throw err
+        }
       })
     }
   },

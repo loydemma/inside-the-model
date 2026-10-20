@@ -67,7 +67,7 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
         <div class="flower-stage" data-flower-stage tabindex="0" role="button" aria-label="Press and hold to grow the answer (Space or Enter)">
           <span class="hold-pill" aria-hidden="true"><span class="hold-dot"></span><span class="hold-idle">Press and hold the flower</span><span class="hold-busy">Keep holding&hellip;</span></span>
         </div>
-        <div class="chat" aria-live="polite">
+        <div class="chat">
           <p class="chat-q"><span class="chat-tag">Illustrative example</span><span data-question></span></p>
           <div class="source-card" data-source-card hidden>
             <p class="source-label">Source</p>
@@ -77,9 +77,10 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
           <p class="chat-a" data-response></p>
           <p class="cands-label" aria-hidden="true">AI&rsquo;s top guesses for the next word</p>
           <div class="cands" data-candidates aria-hidden="true"></div>
+          <p class="sr-only" data-announce aria-live="polite"></p>
         </div>
         <p class="caption" data-caption>It picks likely words, not true ones. That author doesn&rsquo;t exist.</p>
-        <p class="hint" data-hint>Your turn: press and hold the flower to grow the AI&rsquo;s answer. Then tap &ldquo;Give it a source.&rdquo;</p>
+        <p class="hint" data-hint>Your turn: press and hold the flower to grow the AI&rsquo;s answer. Then choose &ldquo;Give it a source.&rdquo;</p>
         <div class="flower-controls">
           <button class="btn" type="button" data-source-btn hidden>Give it a source</button>
         </div>

@@ -206,14 +206,15 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
 }
 
 /* Flower: the answer grows one word (one petal) at a time. Like the orange, the canvas spans the
-   section and the stage marks where the flower sits; it is the only place that captures a hold. */
+   section and the stage marks where the flower sits; it is the only place that takes a hold, and a
+   vertical swipe there still scrolls the page. */
 #flower { --mood: #ff7aa2; --mood-soft: rgba(255, 122, 162, 0.16); }
 #flower[data-mood='grounded'] { --mood: #9ec0ff; --mood-soft: rgba(158, 192, 255, 0.16); }
 .flower-stage {
   position: relative;
   height: clamp(260px, 40svh, 380px);
   margin: 8px calc(-1 * var(--gutter)) 0;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -221,7 +222,7 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
   border-radius: 24px;
 }
 .flower-stage:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.5); outline-offset: -8px; }
-.no-3d .flower-stage { display: none; }
+.no-3d .flower-stage, #flower.no-flower .flower-stage { display: none; }
 .chat {
   margin-top: 16px;
   padding: 16px 18px 14px;
@@ -267,7 +268,8 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
 }
 @keyframes word-in { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
 /* The guesses: one steady panel of five fixed columns, updated in place. Each column's bar is the
-   word's odds; the picked word gets a check. Nothing blurs, flashes or reflows between words. */
+   word's odds; the picked word gets a check by its odds. A word may wrap to two lines, and both are
+   always reserved, so nothing blurs, flashes or reflows between words. */
 .cands-label { margin: 14px 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); visibility: hidden; }
 .has-guesses .cands-label { visibility: visible; }
 .cands { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; min-height: 52px; }
@@ -294,10 +296,27 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
   opacity: 0.8;
   transition: width 300ms ease-out;
 }
-.cand-word { font-size: 14px; font-weight: 600; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
-.cand-p { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-soft); }
+.cand-word {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  height: 2.4em; /* two lines, always */
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.cand-p { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-soft); white-space: nowrap; }
 .cand[data-chosen] { border-color: var(--mood); background: var(--mood-soft); }
-.cand[data-chosen] .cand-word::after { content: ' \2713'; color: var(--mood); }
+.cand[data-chosen] .cand-p::after { content: ' \2713'; color: var(--mood); }
+/* A narrow panel (phones) can't fit five names across, so the guesses sit three and two, one line each. */
+#flower .chat { container-type: inline-size; }
+@container (max-width: 470px) {
+  .cands { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cand-word { height: 1.2em; -webkit-line-clamp: 1; }
+}
 /* "Press and hold the flower": on the stage, once it's your turn, out of the way while it grows by itself. */
 .hold-pill {
   position: absolute;
@@ -321,6 +340,8 @@ html.js .orange-controls.is-shown, html.js .counter.is-shown { opacity: 1; visib
   transition: opacity 400ms ease-out;
 }
 .is-your-turn:not(.is-auto) .hold-pill { opacity: 1; }
+/* The flower's pill waits for the flower, and steps aside once an answer is done. */
+#flower:not(.has-flower) .hold-pill, #flower.is-answered .hold-pill { opacity: 0; }
 .hold-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--mood); box-shadow: 0 0 0 0 var(--mood); animation: hold-ping 1.6s ease-out infinite; }
 .is-holding .hold-dot { animation: none; box-shadow: 0 0 12px var(--mood); }
 .hold-busy, .is-holding .hold-idle { display: none; }
@@ -344,13 +365,13 @@ html.js .flower-controls { opacity: 0; visibility: hidden; transition: opacity 7
 html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition: opacity 700ms ease-out, visibility 0s; }
 @media (prefers-reduced-motion: reduce) {
   .chat-a .word, .source-card, .hold-dot { animation: none; }
-  html.js .flower-controls { transition: none; }
+  html.js .flower-controls, .hold-pill, .cand, .cand::after { transition: none; }
 }
 @media (min-width: 900px) {
   #flower::before { background: radial-gradient(ellipse 45% 55% at 72% 50%, var(--glow), transparent 70%); }
   #flower .stage-text { max-width: min(520px, 42vw); }
   #flower .flower-stage { position: absolute; top: 64px; bottom: 40px; right: 0; width: 56%; height: auto; margin: 0; }
-  #flower .hold-pill { top: calc(50% + 150px); } /* just under the bloom */
+  #flower .hold-pill { top: auto; bottom: 56px; } /* under the bloom, by the stem */
 }
 
 /* Jello: three clips of a rainbow jello on a plate. The stage holds them and takes the pokes. */
