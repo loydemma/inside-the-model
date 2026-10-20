@@ -44,21 +44,20 @@ if (!q.software) {
   })
 }
 
-// The flower's words and odds are illustrative data; the scene attaches when it scrolls near.
+// The flower's words and odds are illustrative data. The flower is a video, not 3D, so it needs
+// no GPU; it loads when it scrolls near.
 const flowerSection = document.getElementById('flower') as HTMLElement
-const flowerCanvas = document.getElementById('flower-canvas') as HTMLCanvasElement
+const flowerStage = flowerSection.querySelector('[data-flower-stage]') as HTMLElement
 loadData('/data/generation.json', parseHallucination).then(
   (data) => {
     const flower = createFlowerController(flowerSection, data, deeper)
     onFirstArrival(flowerSection, () => (q.reducedMotion ? flower.showAnswered() : void flower.playIntro()))
-    if (!q.software) {
-      mountWhenVisible(flowerCanvas, async () => {
-        const { createFlowerScene } = await import('./sections/flower/flowerScene')
-        const scene = await createFlowerScene(flowerCanvas, q)
-        flower.attach(scene)
-        return scene
-      })
-    }
+    mountWhenVisible(flowerStage, async () => {
+      const { createFlowerScene } = await import('./sections/flower/flowerScene')
+      const scene = await createFlowerScene(flowerStage, q)
+      flower.attach(scene)
+      return scene
+    })
   },
   () => {
     showDemoError(flowerSection)

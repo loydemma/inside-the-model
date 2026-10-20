@@ -6,7 +6,7 @@ import { createGrowth, STEP_MS, type GrowthEvent } from './growth'
 const INTRO_PACE = STEP_MS / 290 // ~290ms a word
 const CALM_PACE = STEP_MS / 850 // ~850ms a word
 
-// What the 3D flower does; the controller works without one. One petal per word of the answer.
+// What the flower does; the controller works without one. One petal per word of the answer.
 export interface FlowerScene extends SceneHandle {
   setPetalCount(n: number): void
   openPetal(i: number, invented?: boolean): void
@@ -119,7 +119,7 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     for (const w of ready) w.resolve()
   }
 
-  // A light clock of its own, so the answer grows with or without the 3D flower.
+  // A light clock of its own, so the answer grows with or without the flower.
   async function loop(): Promise<void> {
     if (looping) return
     looping = true
@@ -194,9 +194,7 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
   // The one-time Show beat: the flower answers a question about a book that doesn't exist, by
   // itself. The caption lands right after the invented author; hint and why once it's done.
   async function playIntro(): Promise<void> {
-    if (!document.documentElement.classList.contains('no-3d')) {
-      await Promise.race([sceneArrived, wait(INTRO.sceneWait)])
-    }
+    await Promise.race([sceneArrived, wait(INTRO.sceneWait)])
     await wait(INTRO.hold)
     begin('ungrounded')
     auto = true
