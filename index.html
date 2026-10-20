@@ -63,7 +63,9 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
       <div class="stage-text">
         <p class="eyebrow">02 · Next-word guessing</p>
         <h2 class="ask" id="flower-title">Does AI know facts?</h2>
-        <div class="flower-stage" data-flower-stage tabindex="0" role="button" aria-label="Press and hold to grow the answer (Space or Enter)"></div>
+        <div class="flower-stage" data-flower-stage tabindex="0" role="button" aria-label="Press and hold to grow the answer (Space or Enter)">
+          <span class="hold-pill" aria-hidden="true"><span class="hold-dot"></span><span class="hold-idle">Press and hold the flower</span><span class="hold-busy">Keep holding&hellip;</span></span>
+        </div>
         <div class="chat" aria-live="polite">
           <p class="chat-q"><span class="chat-tag">Illustrative example</span><span data-question></span></p>
           <div class="source-card" data-source-card hidden>
@@ -72,10 +74,11 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
             <p class="source-text" data-source-text></p>
           </div>
           <p class="chat-a" data-response></p>
+          <p class="cands-label" aria-hidden="true">AI&rsquo;s top guesses for the next word</p>
           <div class="cands" data-candidates aria-hidden="true"></div>
         </div>
         <p class="caption" data-caption>It picks likely words, not true ones. That author doesn&rsquo;t exist.</p>
-        <p class="hint" data-hint>Press and hold to grow it again &mdash; then give it a source.</p>
+        <p class="hint" data-hint>Your turn: press and hold the flower to grow the AI&rsquo;s answer. Then tap &ldquo;Give it a source.&rdquo;</p>
         <div class="flower-controls">
           <button class="btn" type="button" data-source-btn hidden>Give it a source</button>
         </div>

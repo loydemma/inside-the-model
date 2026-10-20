@@ -61,31 +61,37 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     return new Promise((resolve) => waiters.push({ test, resolve }))
   }
 
+  // Five fixed slots, updated in place, so the guesses read as one steady panel rather than chips
+  // that flash and jump every word.
   function showCandidates(step: number): void {
     const s = steps[step]!
-    candidates.replaceChildren(
-      ...s.candidates.map((c) => {
-        const row = document.createElement('span')
-        row.className = 'cand'
-        row.style.setProperty('--p', String(c.p))
-        const word = document.createElement('span')
-        word.className = 'cand-word'
-        word.textContent = c.token
-        const odds = document.createElement('span')
-        odds.className = 'cand-p'
-        odds.textContent = pct(c.p)
-        row.append(word, odds)
-        return row
-      }),
-    )
-    candidates.classList.add('is-live')
+    while (candidates.children.length < s.candidates.length) {
+      const row = document.createElement('span')
+      row.className = 'cand'
+      const word = document.createElement('span')
+      word.className = 'cand-word'
+      const odds = document.createElement('span')
+      odds.className = 'cand-p'
+      row.append(word, odds)
+      candidates.append(row)
+    }
+    const rows = [...candidates.children] as HTMLElement[]
+    rows.forEach((row, i) => {
+      const c = s.candidates[i]
+      row.hidden = !c
+      row.removeAttribute('data-chosen')
+      if (!c) return
+      row.style.setProperty('--p', String(c.p))
+      row.querySelector('.cand-word')!.textContent = c.token
+      row.querySelector('.cand-p')!.textContent = pct(c.p)
+    })
+    root.classList.add('has-guesses')
   }
 
   function commit(step: number): void {
     const s = steps[step]!
     const chosen = candidates.querySelectorAll<HTMLElement>('.cand')[s.candidates.findIndex((c) => c.token === s.chosen)]
     chosen?.setAttribute('data-chosen', '')
-    candidates.classList.add('has-choice')
     if (step > 0 && !glued(s.chosen)) response.append(' ')
     const word = document.createElement('span')
     word.className = 'word'
@@ -98,12 +104,11 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
 
   function handle(e: GrowthEvent): void {
     if (e.type === 'candidates') {
-      candidates.classList.remove('has-choice')
       showCandidates(e.step)
     } else if (e.type === 'commit') commit(e.step)
     else {
       finished = true
-      auto = false
+      setAuto(false)
       root.classList.remove('is-growing')
       if (run === 'ungrounded') sourceBtn.hidden = false
     }
@@ -145,7 +150,7 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     demo = false
     response.replaceChildren()
     candidates.replaceChildren()
-    candidates.classList.remove('is-live', 'has-choice')
+    root.classList.remove('has-guesses')
     sourceCard.hidden = next !== 'grounded'
     sourceBtn.hidden = true
     root.dataset.mood = next === 'grounded' ? 'grounded' : 'guess'
@@ -160,6 +165,12 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
     for (let i = 0; i < committed; i++) scene.openPetal(i, steps[i]!.invented === true && run === 'ungrounded')
   }
 
+  // While the flower grows by itself (intro, grounded answer), the "press and hold" pill steps aside.
+  function setAuto(on: boolean): void {
+    auto = on
+    root.classList.toggle('is-auto', on)
+  }
+
   function attach(s: FlowerScene): void {
     scene = s
     syncScene()
@@ -170,44 +181,48 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
   // a new hold grows a fresh, unsourced one.
   function hold(on: boolean): void {
     if (on && (auto || holding)) return
-    if (!on) { holding = false; return }
+    if (!on) { holding = false; root.classList.remove('is-holding'); return }
     if (finished || demo) begin('ungrounded')
     holding = true
+    root.classList.add('is-holding')
     void loop()
   }
 
   // "Give it a source": the flower regrows, cooler, with the source card beside it, by itself.
   function groundIt(): void {
     holding = false
+    root.classList.remove('is-holding')
     begin('grounded')
-    auto = true
+    setAuto(true)
     void loop()
   }
 
   function reset(): void {
     holding = false
-    auto = false
+    root.classList.remove('is-holding')
+    setAuto(false)
     begin('ungrounded')
     root.classList.remove('is-growing')
   }
 
-  // The one-time Show beat: the flower answers a question about a book that doesn't exist, by
-  // itself. The caption lands right after the invented author; hint and why once it's done.
+  // On arrival: the question, a closed bud and "press and hold". The visitor's own hold grows the
+  // answer about a book that doesn't exist; the caption lands right after the invented author, then
+  // the source button and why once it's done.
   async function playIntro(): Promise<void> {
     if (!document.documentElement.classList.contains('no-3d')) {
       await Promise.race([sceneArrived, wait(INTRO.sceneWait)])
     }
     await wait(INTRO.hold)
+    // A closed bud and the instruction; nothing grows until the visitor holds the flower (Emma).
     begin('ungrounded')
-    auto = true
-    void loop()
+    reveal('[data-hint]')
+    root.classList.add('is-your-turn')
     const invented = steps.findIndex((s) => s.invented)
     await until(() => committed > invented || run !== 'ungrounded')
     reveal('[data-caption]')
     await until(() => finished || run !== 'ungrounded')
-    demo = run === 'ungrounded'
     await wait(INTRO.hint)
-    reveal('[data-hint]', '.flower-controls')
+    reveal('.flower-controls')
     await wait(INTRO.why)
     reveal('.why')
   }
@@ -215,14 +230,14 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
   // Reduced motion: the full, invented answer straight away.
   function showAnswered(): void {
     begin('ungrounded')
-    auto = true
+    setAuto(true)
     while (!finished) frame(STEP_MS)
     const invented = steps.findIndex((s) => s.invented)
     showCandidates(invented)
     candidates.querySelectorAll('.cand')[steps[invented]!.candidates.findIndex((c) => c.token === steps[invented]!.chosen)]?.setAttribute('data-chosen', '')
-    candidates.classList.add('has-choice')
     demo = true
     reveal('[data-caption]', '[data-hint]', '.flower-controls', '.why')
+    root.classList.add('is-your-turn')
   }
 
   sourceBtn.addEventListener('click', groundIt)

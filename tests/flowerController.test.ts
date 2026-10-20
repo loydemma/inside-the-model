@@ -23,11 +23,14 @@ function setup() {
 afterEach(() => { vi.useRealTimers() })
 
 describe('flower controller', () => {
-  it('grows an invented answer on arrival, then offers a source', async () => {
+  it('waits for a hold, grows an invented answer, then offers a source', async () => {
     vi.useFakeTimers()
     const { root, ctl } = setup()
     const intro = ctl.playIntro()
-    await vi.advanceTimersByTimeAsync(30_000)
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(root.querySelector('[data-response]')!.textContent).toBe('') // nothing grows on arrival
+    ctl.hold(true)
+    await vi.advanceTimersByTimeAsync(60_000)
     await intro
     const invented = data.ungrounded.steps.find((s) => s.invented)!.chosen
     expect(root.querySelector('[data-response] [data-invented]')?.textContent).toBe(invented)
