@@ -7,6 +7,7 @@ import { mountWhenVisible } from './engine/sceneHost'
 import { createOrangeController } from './sections/orange/orangeController'
 import { createFlowerController } from './sections/flower/flowerController'
 import { createJelloController } from './sections/jello/jelloController'
+import { createRocketController } from './sections/rocket/rocketController'
 import { loadData, showDemoError } from './data/load'
 import { parseHallucination, parseTemperature } from './data/types'
 import { PORTFOLIO_URL, REPO_URL } from './config'
@@ -87,12 +88,14 @@ loadData('/data/temperature.json', parseTemperature).then(
   },
 )
 
-// Until each section's controller drives its own intro (playIntro / showAnswered), reveal the
-// caption, hint and why lines the first time the section arrives (straight away on reduced motion).
-document.querySelectorAll<HTMLElement>('section.stage-section:not(#orange):not(#flower):not(#jello)').forEach((section) => {
-  const reveal = (): void => {
-    section.querySelectorAll('.caption, .hint, .why').forEach((el) => el.classList.add('is-shown'))
-  }
-  if (q.reducedMotion) reveal()
-  else onFirstArrival(section, reveal)
+// The rocket's odds are real math. It is stills and a video, not 3D, so it needs no GPU.
+const rocketSection = document.getElementById('rocket') as HTMLElement
+const rocketStage = rocketSection.querySelector('[data-rocket-stage]') as HTMLElement
+const rocket = createRocketController(rocketSection, deeper)
+onFirstArrival(rocketSection, () => (q.reducedMotion ? rocket.showAnswered() : void rocket.playIntro()))
+mountWhenVisible(rocketStage, async () => {
+  const { createRocketScene } = await import('./sections/rocket/rocketScene')
+  const scene = await createRocketScene(rocketStage, q)
+  rocket.attach(scene)
+  return scene
 })

@@ -128,20 +128,28 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
 
 
     <section id="rocket" class="stage-section" aria-labelledby="rocket-title">
-      <canvas id="rocket-canvas" class="stage-canvas" aria-hidden="true"></canvas>
       <div class="stage-text">
         <p class="eyebrow">04 · Agents</p>
         <h2 class="ask" id="rocket-title">If each step works 95% of the time, how often does a 10-step task work?</h2>
-        <p class="caption" data-caption>Every extra step multiplies the risk. AI agents run many steps.</p>
+        <div class="rocket-stage" data-rocket-stage aria-hidden="true">
+          <span class="hold-pill"><span class="hold-dot"></span>Set the sliders, then press Launch</span>
+        </div>
+        <div class="odds-row">
+          <p class="odds" data-odds aria-live="polite">60%</p>
+          <p class="odds-label" data-odds-label>chance all 10 steps work</p>
+        </div>
         <p class="hint" data-hint>Drag the sliders, then press Launch.</p>
         <div class="rocket-controls">
           <label class="slider-label" for="steps-slider">Steps <output data-steps-value>10</output></label>
           <input id="steps-slider" type="range" min="1" max="20" step="1" value="10" data-steps-slider />
           <label class="slider-label" for="reliability-slider">Reliability per step <output data-reliability-value>95%</output></label>
           <input id="reliability-slider" type="range" min="80" max="99" step="1" value="95" data-reliability-slider />
-          <p class="odds" data-odds aria-live="polite">60%</p>
-          <button class="btn" type="button" data-launch>Launch</button>
+          <div class="launch-row">
+            <button class="btn" type="button" data-launch>Launch</button>
+            <p class="result" data-result aria-live="polite"></p>
+          </div>
         </div>
+        <p class="caption" data-caption>Every extra step multiplies the risk. AI agents run many steps.</p>
         <div class="why">
           <p data-why>AI agents can stumble on long tasks, so check their work at key points &mdash; which is why good agents keep steps short, add checks, and loop in a human for risky moves.</p>
         </div>
@@ -157,7 +165,7 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
 
     <section class="ending" aria-label="Credits">
       <p data-reveal>Designed and built by Emma Loyd</p>
-      <div class="ending-links">
+      <div class="ending-links" data-reveal>
         <a class="btn" href="#" data-portfolio-link>← Back to portfolio</a>
         <a class="repo-link" href="#" data-repo-link>View the code</a>
       </div>
