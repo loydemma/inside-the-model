@@ -24,15 +24,15 @@
       </header>
       <div class="stage-text">
         <p class="eyebrow">01 · Tokens</p>
-        <h2 class="ask" id="orange-title">How many r&rsquo;s are in <em>strawberry</em>?</h2>
+        <h2 class="ask" id="orange-title">How many letters does AI see in <em>oranges</em>?</h2>
         <div class="orange-stage" data-orange-stage aria-hidden="true"></div>
         <p class="caption" data-caption>AI doesn&rsquo;t see letters. It sees chunks, so counting letters is surprisingly hard for it.</p>
-        <p class="counter" data-counter aria-live="polite">You see <span data-letters>10</span> <span data-letters-unit>letters</span>. AI sees <span data-chunks>3</span> <span data-chunks-unit>chunks</span>.</p>
+        <p class="counter" data-counter aria-live="polite">You see <span data-letters>7</span> <span data-letters-unit>letters</span>. AI sees <span data-chunks>2</span> <span data-chunks-unit>chunks</span>.</p>
         <p class="done" data-done hidden></p>
         <p class="hint" data-hint>Your turn: drag across the orange to slice.</p>
         <div class="orange-controls">
           <label class="sr-only" for="sentence-input">Word or sentence to slice (Enter slices the next chunk)</label>
-          <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" placeholder="Type any word or sentence" value="strawberry" />
+          <input id="sentence-input" class="sentence-input" data-sentence-input maxlength="200" autocomplete="off" spellcheck="false" placeholder="Type any word or sentence" value="oranges" />
           <div class="chips" data-chips aria-live="polite"></div>
           <p class="note" data-truncated hidden></p>
           <p class="note" data-empty-note hidden></p>
@@ -49,8 +49,9 @@
 import o200k_base from 'js-tiktoken/ranks/o200k_base'
 
 const enc = new Tiktoken(o200k_base)
-enc.encode("strawberry")   // [302, 1618, 19772]
-                           // "st" + "raw" + "berry"</code></pre>
+enc.encode("oranges")   // [267, 8273]
+                        // "or" + "anges"
+enc.encode("orange")    // [65681], one chunk</code></pre>
         <p>Your text is <span data-slot="count">0</span> tokens long. Because a word is a few chunks rather than a row of letters, counting its letters is hard for a model, and it has tripped models up. Some pieces are only part of a character (an emoji is several bytes), so its label shows &lang;byte&rang; instead of broken text.</p>
         <p><strong>Data source:</strong> Real tokenizer: o200k_base (GPT-4o's), running in your browser. The orange is only a way to show the pieces.</p>
         <p><strong>In production:</strong> tokens are what you are billed for and what limits a model's context window. The same sentence can cost more or fewer tokens depending on the language and the words, which is why long prompts cost more and can run out of room.</p>

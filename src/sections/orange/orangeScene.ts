@@ -580,9 +580,11 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
     const t = Math.max(0, Math.min(1, ((m.x - ax) * dx + (m.y - ay) * dy) / (dx * dx + dy * dy || 1)))
     if (Math.hypot(ax + dx * t - m.x, ay + dy * t - m.y) > m.r * 0.96) return false
 
-    // Only one token: there is nothing to cut off. The whole orange is that one chunk.
+    // Only one token: there is nothing to cut off. The whole orange is that one chunk, and the
+    // blade glances off it.
     if (tokenCount <= 1 || pieces.length >= tokenCount) {
       if (main.label || pieces.length > 1) return false
+      if (!still) entrance.x = 0.9
       main.label = makeLabel(label)
       plan()
       return true

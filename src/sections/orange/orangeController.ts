@@ -16,7 +16,7 @@ export interface OrangeScene extends SceneHandle {
 }
 
 const DEBOUNCE_MS = 150
-const DEFAULT_WORD = 'strawberry'
+const DEFAULT_WORD = 'oranges'
 const DRAG_PX = 30
 // Intro beats, in ms: the whole orange holds under the question, is slashed twice (the scene's
 // own timing, ~0.6s each), then the caption, the hint and the why paragraph come in.
@@ -61,7 +61,12 @@ export function createOrangeController(
     if (chunksUnit) chunksUnit.textContent = plural(cut, 'chunk')
     const all = tokens.length > 0 && cut === tokens.length
     done.hidden = !all || demo
-    done.textContent = all ? `That’s all: ${cut} ${plural(cut, 'chunk')}` : ''
+    // One token: the knife has nothing to cut, so say why rather than leave the orange whole silently.
+    const one =
+      'That’s a single chunk, so there’s nothing to cut. Words that were common in the text the tokenizer ' +
+      'was built from get a chunk of their own; rarer words are pieced together from smaller chunks. ' +
+      'Try a longer word or a sentence.'
+    done.textContent = all ? (cut === 1 ? one : `That’s all: ${cut} ${plural(cut, 'chunk')}`) : ''
   }
 
   async function update(next: string): Promise<void> {
@@ -149,8 +154,8 @@ export function createOrangeController(
     return update(DEFAULT_WORD)
   }
 
-  // The one-time Show beat on first arrival: a blade slashes strawberry twice by itself (st, raw,
-  // and berry is left), the counter lands, then the caption, the hint (with the input) and why.
+  // The one-time Show beat on first arrival: a blade slashes oranges by itself (or, and anges is
+  // left), the counter lands, then the caption, the hint (with the input) and why.
   async function playIntro(): Promise<void> {
     try {
       await loadDefault()

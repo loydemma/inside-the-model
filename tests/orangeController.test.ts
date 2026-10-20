@@ -40,6 +40,16 @@ describe('orange controller', () => {
     expect(done.textContent).toBe('That’s all: 3 chunks')
   })
 
+  it('says a one-token word has nothing to cut', async () => {
+    const { root, ctl } = setup()
+    await ctl.update('orange')
+    expect(ctl.sliceNext()?.text).toBe('orange')
+    expect(ctl.sliceNext()).toBeNull()
+    const done = root.querySelector<HTMLElement>('[data-done]')!
+    expect(done.hidden).toBe(false)
+    expect(done.textContent).toMatch(/^That’s a single chunk, so there’s nothing to cut\./)
+  })
+
   it('shows the empty note and slices nothing for blank input', async () => {
     const { root, ctl } = setup()
     await ctl.update('   ')
@@ -74,7 +84,7 @@ describe('orange controller', () => {
     await vi.waitFor(() => expect(root.querySelector('[data-chips]')!.children).toHaveLength(2))
   })
 
-  it('plays the intro: slashes strawberry twice by itself, then reveals caption, hint and why', async () => {
+  it('plays the intro: slashes oranges by itself, then reveals caption, hint and why', async () => {
     await tokenize('warm up') // the tokenizer loads before the clock is faked
     const { root, scene, ctl } = setup()
     vi.useFakeTimers()
@@ -85,10 +95,10 @@ describe('orange controller', () => {
     } finally {
       vi.useRealTimers()
     }
-    expect(scene.setText).toHaveBeenLastCalledWith('strawberry', 3)
+    expect(scene.setText).toHaveBeenLastCalledWith('oranges', 2)
     const calls = vi.mocked(scene.autoSlice).mock.calls.map(([t, rest]) => [t.text, rest?.text])
-    expect(calls).toEqual([['st', undefined], ['raw', 'berry']])
-    expect(text(root, '[data-chunks]')).toBe('3')
+    expect(calls).toEqual([['or', 'anges']])
+    expect(text(root, '[data-chunks]')).toBe('2')
     for (const sel of ['[data-counter]', '[data-caption]', '[data-hint]', '.why']) {
       expect(root.querySelector(sel)!.classList.contains('is-shown')).toBe(true)
     }
@@ -100,7 +110,7 @@ describe('orange controller', () => {
     for (const sel of ['[data-caption]', '[data-hint]', '.why']) {
       expect(root.querySelector(sel)!.classList.contains('is-shown')).toBe(true)
     }
-    await vi.waitFor(() => expect(scene.autoSlice).toHaveBeenCalledTimes(2))
-    expect(text(root, '[data-chunks]')).toBe('3')
+    await vi.waitFor(() => expect(scene.autoSlice).toHaveBeenCalledTimes(1))
+    expect(text(root, '[data-chunks]')).toBe('2')
   })
 })
