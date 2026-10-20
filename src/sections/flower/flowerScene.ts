@@ -1,16 +1,21 @@
 import {
-  BackSide, BufferAttribute, BufferGeometry, CanvasTexture, CatmullRomCurve3, Color, DirectionalLight, DoubleSide, Group,
-  IcosahedronGeometry, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshPhysicalNodeMaterial, MeshStandardNodeMaterial,
-  NeutralToneMapping, PerspectiveCamera, PlaneGeometry, PMREMGenerator, PointLight, Quaternion, RenderPipeline, Scene,
-  SphereGeometry, SRGBColorSpace, TubeGeometry, Vector3,
+  BackSide, BufferAttribute, BufferGeometry, CapsuleGeometry, CatmullRomCurve3, Color, DirectionalLight, DoubleSide, Euler,
+  Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshPhysicalNodeMaterial, MeshStandardNodeMaterial,
+  NeutralToneMapping, PerspectiveCamera, PlaneGeometry, PMREMGenerator, PointLight, Quaternion, RenderPipeline,
+  RepeatWrapping, Scene, SphereGeometry, SRGBColorSpace, TextureLoader, TubeGeometry, Vector3, type Node, type Texture,
 } from 'three/webgpu'
-import { color, float, mix, pass, screenUV, smoothstep, texture, uniform, uv, vec2 } from 'three/tsl'
+import { abs, color, dot, mix, pass, screenUV, smoothstep, texture, uniform, uv, vec2, vec3 } from 'three/tsl'
 import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 import { createRenderer } from '../../engine/renderer'
 import { setStatus } from '../../engine/status'
 import { createPointer, MAX_TILT_RAD, smoothToward } from '../../engine/pointer'
 import type { Quality } from '../../engine/quality'
 import type { FlowerScene } from './flowerController'
+import petalRoseUrl from './petal-rose.jpg'
+import petalBlueUrl from './petal-blue.jpg'
+import petalWhiteUrl from './petal-white.jpg'
+import leafUrl from './leaf.jpg'
+import stemUrl from './stem.jpg'
 
 const STAGE = '#05060a'
 const GLOW = '#121a44'
@@ -21,14 +26,15 @@ const FILL = 0.66 // the open bloom's share of the stage's short side
 const BLOOM_D = 3.1 // the open bloom's natural diameter, in world units
 const SEG_U = 10
 const SEG_V = 22
-const SEEDS = 220
+const STAMENS = 64
 
-// Two palettes: warm and a little feverish while it guesses; cool and steady once it has a source.
+// Two moods: warm and golden while it guesses; cool and steady once it has a source. The petal
+// photos carry the color; these tint the heart, its glow and the lights.
 const MOODS = {
-  guess: { base: '#d63a6e', mid: '#ff5c8a', tip: '#ffc4b4', heart: '#ffb43a', glow: '#ff7a59' },
-  grounded: { base: '#3d63d8', mid: '#7fa4ff', tip: '#dfe9ff', heart: '#9ff0e0', glow: '#7fb0ff' },
+  guess: { heart: '#ffae12', glow: '#ffa20a', key: '#fff1e8', rim: '#ff9ec4', bg: '#22102e' },
+  grounded: { heart: '#bfefff', glow: '#7fc4ff', key: '#eef4ff', rim: '#8fb4ff', bg: '#0f1d4a' },
 }
-const INVENTED = { base: '#7a0618', mid: '#e0283c', tip: '#ff9a8a' }
+const INVENTED = '#d4142c' // the made-up word's petal: a warning crimson
 
 // Damped spring; a ratio below 1 gives a small, organic settle.
 class Spring {
@@ -50,37 +56,12 @@ function untoned(hex: string): Color {
   return new Color(t.r + d, t.g + d, t.b + d)
 }
 
-// Petal veins: fine lines fanning from the base, a soft midrib, and a darker throat. Luminance only;
-// the color comes from the mood palette.
-function veinTexture(): CanvasTexture {
-  const W = 256
-  const H = 512
-  const c = document.createElement('canvas')
-  c.width = W
-  c.height = H
-  const g = c.getContext('2d')!
-  g.fillStyle = '#ffffff'
-  g.fillRect(0, 0, W, H)
-  g.lineCap = 'round'
-  for (let i = 0; i < 26; i++) {
-    const s = (i / 25) * 2 - 1
-    g.strokeStyle = `rgba(80,40,60,${0.1 + 0.08 * (1 - Math.abs(s))})`
-    g.lineWidth = 1.4 + (1 - Math.abs(s)) * 1.2
-    g.beginPath()
-    g.moveTo(W / 2 + s * 6, H)
-    g.bezierCurveTo(W / 2 + s * W * 0.22, H * 0.62, W / 2 + s * W * 0.42, H * 0.3, W / 2 + s * W * 0.36, H * 0.02)
-    g.stroke()
-  }
-  const rib = g.createLinearGradient(W * 0.44, 0, W * 0.56, 0)
-  rib.addColorStop(0, 'rgba(90,40,60,0)')
-  rib.addColorStop(0.5, 'rgba(90,40,60,0.16)')
-  rib.addColorStop(1, 'rgba(90,40,60,0)')
-  g.fillStyle = rib
-  g.fillRect(0, H * 0.25, W, H * 0.75)
-  const t = new CanvasTexture(c)
-  t.colorSpace = SRGBColorSpace
-  t.anisotropy = 8
-  return t
+function loadTexture(url: string): Promise<Texture> {
+  return new TextureLoader().loadAsync(url).then((t) => {
+    t.colorSpace = SRGBColorSpace
+    t.anisotropy = 8
+    return t
+  })
 }
 
 // A petal: base at the origin, running up +Y, its inner face toward -Z. `curl` bends it along its
@@ -143,6 +124,25 @@ function shapePetal(geo: BufferGeometry, curl: number, cup: number, ruffle: numb
   geo.computeBoundingSphere()
 }
 
+// A leaf: a pointed ellipse along +Y with a creased midrib, curling gently back along its length.
+function leafGeometry(): BufferGeometry {
+  const geo = petalGeometry()
+  const pos = geo.getAttribute('position') as BufferAttribute
+  for (let j = 0; j <= SEG_V; j++) {
+    const v = j / SEG_V
+    const width = 0.21 * Math.sin(Math.PI * v ** 0.8) ** 0.85
+    const y = Math.sin(v * 1.1) / 1.1
+    const z = 0.22 * v * v
+    for (let i = 0; i <= SEG_U; i++) {
+      const s = (i / SEG_U) * 2 - 1
+      pos.setXYZ(j * (SEG_U + 1) + i, s * width, y, z - 0.35 * Math.abs(s) * width + 0.08 * s * s * width)
+    }
+  }
+  geo.computeVertexNormals()
+  geo.computeBoundingSphere()
+  return geo
+}
+
 interface Petal {
   pivot: Group
   mesh: Mesh
@@ -154,15 +154,20 @@ interface Petal {
   widthK: number
   seed: number
   invented: boolean
+  age: number // seconds since it was told to open
 }
 
 export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): Promise<FlowerScene> {
   const still = q.reducedMotion
   const high = q.tier === 'high'
   const stage = (canvas.closest('section')?.querySelector('[data-flower-stage]') ?? canvas) as HTMLElement
-  const { renderer, backend } = await createRenderer(canvas, q)
+  const [{ renderer, backend }, rose, blue, white, leafMap, stemMap] = await Promise.all([
+    createRenderer(canvas, q),
+    loadTexture(petalRoseUrl), loadTexture(petalBlueUrl), loadTexture(petalWhiteUrl), loadTexture(leafUrl), loadTexture(stemUrl),
+  ])
+  stemMap.wrapS = stemMap.wrapT = RepeatWrapping
   renderer.toneMapping = NeutralToneMapping
-  renderer.toneMappingExposure = 1
+  renderer.toneMappingExposure = high ? 1 : 0.9 // no bloom on the light tier; keep its center from running pale
 
   const scene = new Scene()
   const glowCenter = uniform(vec2(0.5, 0.5))
@@ -193,38 +198,39 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
     if (o instanceof Mesh) { o.geometry.dispose(); (o.material as MeshBasicMaterial).dispose() }
   })
 
-  const key = new DirectionalLight('#fff1e8', 2.6)
+  const key = new DirectionalLight(MOODS.guess.key, 2.4)
   key.position.set(-4, 7, 6)
-  const rim = new DirectionalLight('#9fb0ff', 2.2)
+  const rim = new DirectionalLight(MOODS.guess.rim, 2.6)
   rim.position.set(5, 3, -6)
-  const heartLight = new PointLight('#ffb070', 1, 1.6, 2) // light from the heart, so the inner faces glow
-  heartLight.position.set(0, 0.35, 0)
+  const heartLight = new PointLight(MOODS.guess.glow, 1, 2.2, 1) // light from the heart, so the inner faces glow
+  heartLight.position.set(0, 0.6, 0) // high enough that it can't blow out the innermost petals
   scene.add(key, rim)
 
-  // Mood colors, shared by every petal (uniforms ease toward their target).
-  const cBase = uniform(new Color(MOODS.guess.base))
-  const cMid = uniform(new Color(MOODS.guess.mid))
-  const cTip = uniform(new Color(MOODS.guess.tip))
+  // Petals wear the Grok Imagine petal photos (base at v=0, tip at v=1). The mood crossfades rose to
+  // icy blue; the heart's glow lights each petal's throat, and a little self-light keeps them
+  // translucent, as if backlit.
+  const moodK = uniform(0)
   const cHeart = uniform(new Color(MOODS.guess.heart))
-  const veins = veinTexture()
-  const petalColor = (base: typeof cBase, mid: typeof cBase, tip: typeof cBase) => {
-    const v = uv().y
-    const grad = mix(mix(base, mid, smoothstep(0.0, 0.45, v)), tip, smoothstep(0.4, 1.0, v))
-    return grad.mul(texture(veins).r.mul(0.5).add(0.5))
-  }
-  const makePetalMat = (base: typeof cBase, mid: typeof cBase, tip: typeof cBase) => {
-    const m = new MeshPhysicalNodeMaterial({ side: DoubleSide, roughness: 0.52, sheen: 0.6, sheenRoughness: 0.4 })
-    m.colorNode = petalColor(base, mid, tip)
-    m.sheenNode = mid
-    // A soft inner glow, strongest at the throat, so the bloom reads as lit from within.
-    m.emissiveNode = mix(base, mid, float(0.5)).mul(smoothstep(0.6, 0.0, uv().y).mul(0.2))
+  const cGlow = uniform(new Color(MOODS.guess.glow))
+  // Each petal flares briefly as it unfurls, so every word's petal reads as its own.
+  const fresh = uniform(0).onObjectUpdate(({ object }) => (object?.userData.fresh as number | undefined) ?? 0)
+  const v = uv().y
+  const edge = smoothstep(0.55, 1.0, abs(uv().x.mul(2).sub(1)))
+  const saturate = (c: Node<'vec3'>) => mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, 1.4)
+  const makePetalMat = (lit: Node<'vec3'>, self: number) => {
+    // The pale throat is darkened a touch (more without bloom) so the center reads gold, not white.
+    const albedo = lit.mul(smoothstep(0.0, 0.45, v).mul(high ? 0.3 : 0.45).add(high ? 0.7 : 0.55))
+    const m = new MeshPhysicalNodeMaterial({ side: DoubleSide, roughness: 0.5, sheen: 0.5, sheenRoughness: 0.45 })
+    m.colorNode = albedo
+    m.sheenNode = albedo
+    m.emissiveNode = albedo.mul(edge.mul(0.25).add(self).add(fresh.mul(0.55)))
+      .add(cGlow.mul(smoothstep(0.32, 0.0, v).mul(high ? 0.28 : 0.1)))
     return m
   }
-  const petalMat = makePetalMat(cBase, cMid, cTip)
-  const iBase = uniform(new Color(INVENTED.base))
-  const iMid = uniform(new Color(INVENTED.mid))
-  const iTip = uniform(new Color(INVENTED.tip))
-  const inventedMat = makePetalMat(iBase, iMid, iTip)
+  // While guessing, the tips deepen toward magenta, as in the Grok bloom.
+  const blush = mix(vec3(1), vec3(1.0, 0.62, 0.92), smoothstep(0.4, 1.0, v).mul(moodK.oneMinus()).mul(0.8))
+  const petalMat = makePetalMat(saturate(mix(texture(rose).rgb, texture(blue).rgb, moodK)).mul(blush).mul(0.9), 0.06)
+  const inventedMat = makePetalMat(texture(white).rgb.mul(color(INVENTED)), 0.4)
 
   // Hierarchy: hero (pointer tilt) > fit (scale and centering) > flower (faces the camera a little).
   const hero = new Group()
@@ -236,56 +242,69 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
   scene.add(hero)
   flower.add(heartLight)
 
-  // The heart: a soft dome of seeds laid out on the golden angle too.
-  const heartMat = new MeshStandardNodeMaterial({ roughness: 0.55 })
+  // The heart: a glowing golden dome ringed by stamens on the golden angle.
+  const heartMat = new MeshStandardNodeMaterial({ roughness: 0.5 })
   heartMat.colorNode = cHeart
-  heartMat.emissiveNode = cHeart.mul(0.12)
-  const dome = new Mesh(new SphereGeometry(0.26, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), heartMat)
-  dome.scale.y = 0.42
+  heartMat.emissiveNode = cHeart.mul(high ? 0.8 : 0.9)
+  const dome = new Mesh(new SphereGeometry(0.2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), heartMat)
+  dome.scale.y = 0.5
   flower.add(dome)
-  const seedMat = new MeshStandardNodeMaterial({ roughness: 0.35, metalness: 0.1 })
-  seedMat.colorNode = cHeart.mul(0.75)
-  seedMat.emissiveNode = cHeart.mul(0.2)
-  const seeds = new InstancedMesh(new IcosahedronGeometry(1, 1), seedMat, SEEDS)
+  const stamenMat = new MeshStandardNodeMaterial({ roughness: 0.4 })
+  stamenMat.colorNode = cHeart
+  stamenMat.emissiveNode = cHeart.mul(high ? 0.7 : 0.8)
+  const stamens = new InstancedMesh(new CapsuleGeometry(0.014, 0.2, 3, 6), stamenMat, STAMENS)
   {
     const m = new Matrix4()
     const p = new Vector3()
     const s = new Vector3()
     const qn = new Quaternion()
-    for (let i = 0; i < SEEDS; i++) {
-      const r = 0.25 * Math.sqrt((i + 0.5) / SEEDS)
+    const e = new Euler()
+    for (let i = 0; i < STAMENS; i++) {
+      const t = (i + 0.5) / STAMENS
+      const r = 0.06 + 0.2 * Math.sqrt(t)
       const a = i * GOLDEN
-      const h = 0.11 * Math.sqrt(Math.max(0, 1 - (r / 0.26) ** 2))
-      p.set(Math.cos(a) * r, h + 0.004, Math.sin(a) * r)
-      s.setScalar(0.011 + 0.006 * (1 - r / 0.25))
-      seeds.setMatrixAt(i, m.compose(p, qn, s))
+      const lean = 0.25 + 0.9 * t
+      p.set(Math.cos(a) * r, 0.07 + 0.06 * (1 - t), Math.sin(a) * r)
+      qn.setFromEuler(e.set(0, -a, -lean, 'YXZ'))
+      s.set(1, 0.8 + 0.5 * (1 - t), 1)
+      stamens.setMatrixAt(i, m.compose(p, qn, s))
     }
   }
-  flower.add(seeds)
+  flower.add(stamens)
 
-  // Stem and sepals, in a deep green that fades out down the page.
-  const green = new MeshPhysicalNodeMaterial({ roughness: 0.42, clearcoat: 0.4 })
-  green.colorNode = color('#1f5a32')
+  // Stem, two leaves and sepals, all from the Grok leaf and stem photos; the stem fades out down the page.
+  const leafMat = new MeshPhysicalNodeMaterial({ side: DoubleSide, roughness: 0.45, clearcoat: 0.5, clearcoatRoughness: 0.3 })
+  leafMat.colorNode = texture(leafMap).rgb.mul(1.15)
   const stemCurve = new CatmullRomCurve3([
     new Vector3(0, 0, 0), new Vector3(0.05, -0.8, -0.1), new Vector3(-0.12, -2.0, -0.25), new Vector3(0.08, -3.6, -0.3),
   ])
   const stemMat = new MeshPhysicalNodeMaterial({ roughness: 0.42, clearcoat: 0.4, transparent: true })
-  stemMat.colorNode = color('#1f5a32')
+  // Tube UVs run x along the stem and y around it; the fibers run along the stem, tiled so they keep
+  // their proportions.
+  stemMat.colorNode = texture(stemMap, vec2(uv().y, uv().x.mul(7))).rgb.mul(0.8)
   stemMat.opacityNode = smoothstep(1.0, 0.45, uv().x)
   const stem = new Mesh(new TubeGeometry(stemCurve, 48, 0.055, 12), stemMat)
   fit.add(stem)
+  const leafGeo = leafGeometry()
+  const leaves: Mesh[] = []
+  for (const [t, side, len, yaw] of [[0.36, -1, 1.25, 0.5], [0.5, 1, 1.0, -0.6]] as const) {
+    const leaf = new Mesh(leafGeo, leafMat)
+    leaf.position.copy(stemCurve.getPointAt(t))
+    leaf.rotation.set(0.15, yaw, side * 0.95, 'YXZ')
+    leaf.scale.setScalar(len)
+    fit.add(leaf)
+    leaves.push(leaf)
+  }
   const sepalGeo = petalGeometry()
   shapePetal(sepalGeo, -0.3, 0.25, 0, 0)
-  const sepals: Mesh[] = []
   for (let i = 0; i < 5; i++) {
     const pivot = new Group()
     pivot.rotation.y = (i / 5) * Math.PI * 2 + 0.3
-    const m = new Mesh(sepalGeo, green)
+    const m = new Mesh(sepalGeo, leafMat)
     m.rotation.x = 1.75
     m.scale.set(0.5, 0.62, 0.5)
     pivot.add(m)
     flower.add(pivot)
-    sepals.push(m)
   }
 
   // ---------- Petals ----------
@@ -312,7 +331,7 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
       flower.add(pivot)
       const petal: Petal = {
         pivot, mesh, open: new Spring(0, 0, 55, 0.6), shaped: -1,
-        closedTilt: 0.05 + 0.06 * r, openTilt: 1.45 - 0.8 * r, size, widthK: 1.05 - 0.2 * r, seed: i * 1.7, invented: false,
+        closedTilt: 0.05 + 0.06 * r, openTilt: 1.45 - 0.8 * r, size, widthK: 1.05 - 0.2 * r, seed: i * 1.7, invented: false, age: Infinity,
       }
       shape(petal, 0)
       petals.push(petal)
@@ -333,6 +352,7 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
   function openPetal(i: number, invented = false): void {
     const p = petals[i]
     if (!p) return
+    if (p.open.target !== 1) p.age = 0
     p.open.target = 1
     p.invented = invented
     p.mesh.material = invented ? inventedMat : petalMat
@@ -344,6 +364,8 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
       p.open.target = 0
       p.open.snap()
       p.invented = false
+      p.age = Infinity
+      p.mesh.userData.fresh = 0
       p.mesh.material = petalMat
       shape(p, 0)
     }
@@ -352,25 +374,26 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
 
   // ---------- Mood ----------
   const mood = new Spring(0, 0, 6, 1)
-  const from = { base: new Color(), mid: new Color(), tip: new Color(), heart: new Color(), glow: new Color() }
-  const to = { base: new Color(), mid: new Color(), tip: new Color(), heart: new Color(), glow: new Color() }
-  for (const k of Object.keys(from) as (keyof typeof from)[]) {
-    from[k].set(MOODS.guess[k])
-    to[k].set(MOODS.grounded[k])
+  type Tint = keyof typeof MOODS.guess
+  const from = {} as Record<Tint, Color>
+  const to = {} as Record<Tint, Color>
+  for (const k of Object.keys(MOODS.guess) as Tint[]) {
+    from[k] = untoned(MOODS.guess[k])
+    to[k] = untoned(MOODS.grounded[k])
   }
-  const glowGuess = untoned('#1d1240')
-  const glowGround = untoned('#0f1d4a')
   function setMood(m: 'guess' | 'grounded'): void {
     mood.target = m === 'grounded' ? 1 : 0
     if (still) mood.snap()
   }
   function applyMood(t: number): void {
-    ;(cBase.value as Color).lerpColors(from.base, to.base, t)
-    ;(cMid.value as Color).lerpColors(from.mid, to.mid, t)
-    ;(cTip.value as Color).lerpColors(from.tip, to.tip, t)
-    ;(cHeart.value as Color).lerpColors(from.heart, to.heart, t)
-    ;(moodGlow.value as Color).lerpColors(glowGuess, glowGround, t)
-    heartLight.color.lerpColors(from.glow, to.glow, t)
+    const k = t * t * (3 - 2 * t)
+    moodK.value = k
+    ;(cHeart.value as Color).lerpColors(from.heart, to.heart, k)
+    ;(cGlow.value as Color).lerpColors(from.glow, to.glow, k)
+    ;(moodGlow.value as Color).lerpColors(from.bg, to.bg, k)
+    heartLight.color.lerpColors(from.glow, to.glow, k)
+    key.color.lerpColors(from.key, to.key, k)
+    rim.color.lerpColors(from.rim, to.rim, k)
   }
 
   // ---------- Layout ----------
@@ -425,11 +448,17 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
     const next = petals.findIndex((pt) => pt.open.target === 0)
     for (let i = 0; i < petals.length; i++) {
       const pt = petals[i]!
-      if (i === next && pt.open.target === 0) pt.open.x = smoothToward(pt.open.x, holdP * 0.16, dt, 10)
-      else pt.open.step(dt)
+      if (i === next && pt.open.target === 0) {
+        pt.open.x = smoothToward(pt.open.x, holdP * 0.22, dt, 10)
+        pt.mesh.userData.fresh = holdP * 0.5
+      } else {
+        pt.open.step(dt)
+        pt.age += dt
+        pt.mesh.userData.fresh = still ? 0 : Math.min(1, pt.age * 6) * Math.exp(-pt.age * 2.2)
+      }
       if (Math.abs(pt.open.x - pt.shaped) > 0.002) shape(pt, pt.open.x)
     }
-    heartLight.intensity = 1 + 0.8 * Math.min(1, petals.filter((pt) => pt.open.target === 1).length / Math.max(1, petals.length))
+    heartLight.intensity = 0.35 + 0.35 * Math.min(1, petals.filter((pt) => pt.open.target === 1).length / Math.max(1, petals.length))
 
     if (pipeline) pipeline.render()
     else renderer.render(scene, camera)
@@ -468,12 +497,13 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
       renderer.setAnimationLoop(null)
       disposePetals()
       sepalGeo.dispose()
+      leafGeo.dispose()
       stem.geometry.dispose()
       dome.geometry.dispose()
-      seeds.geometry.dispose()
-      seeds.dispose()
-      for (const m of [petalMat, inventedMat, heartMat, seedMat, green, stemMat]) m.dispose()
-      veins.dispose()
+      stamens.geometry.dispose()
+      stamens.dispose()
+      for (const m of [petalMat, inventedMat, heartMat, stamenMat, leafMat, stemMat]) m.dispose()
+      for (const t of [rose, blue, white, leafMap, stemMap]) t.dispose()
       envMap.dispose()
       pipeline?.dispose()
       renderer.dispose()
