@@ -33,7 +33,7 @@ export async function createFlowerScene(stage: HTMLElement, q: Quality): Promise
     video.poster = budUrl
     video.muted = true
     video.playsInline = true
-    video.preload = 'auto' // mounted just before it's seen; the intro needs it buffered
+    video.preload = 'metadata'
     video.disablePictureInPicture = true
     video.setAttribute('aria-hidden', 'true')
     card.append(video, tint)
@@ -50,8 +50,6 @@ export async function createFlowerScene(stage: HTMLElement, q: Quality): Promise
   let held = 0
   let raf = 0
   let last = 0
-  let playFailed = false // autoplay refused (e.g. iOS Low Power Mode): step through by seeking
-  let lastSeek = 0
 
   function rewind(): void {
     opened = 0
@@ -64,21 +62,10 @@ export async function createFlowerScene(stage: HTMLElement, q: Quality): Promise
   function follow(): void {
     if (!video || !video.duration) return
     const gap = target * video.duration - video.currentTime
-    if (playFailed) {
-      const now = performance.now()
-      if (gap > 0.05 && now - lastSeek > 100) { lastSeek = now; video.currentTime = target * video.duration }
-      return
-    }
     if (gap > 0.02 && !video.ended) {
-      // Don't race ahead of what has downloaded.
-      const cap = video.readyState < 3 ? 1 : MAX_RATE
-      const rate = Math.max(MIN_RATE, Math.min(cap, gap / LAG_SEC))
+      const rate = Math.max(MIN_RATE, Math.min(MAX_RATE, gap / LAG_SEC))
       if (Math.abs(rate - video.playbackRate) > 0.08 * video.playbackRate) video.playbackRate = rate
-      if (video.paused) {
-        void video.play().catch((e: unknown) => {
-          if (e instanceof DOMException && e.name === 'NotAllowedError') playFailed = true
-        })
-      }
+      if (video.paused) void video.play().catch(() => {})
     } else if (!video.paused) video.pause()
   }
 
