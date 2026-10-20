@@ -15,7 +15,7 @@ function setup(rand?: () => number) {
   const root = document.getElementById('rocket') as HTMLElement
   const deeper = { open: vi.fn(), close: vi.fn(), setSlot: vi.fn() } as unknown as Deeper
   const scene = {
-    build: vi.fn(), launch: vi.fn(async () => {}), reset: vi.fn(),
+    build: vi.fn(), launch: vi.fn(async () => true), reset: vi.fn(),
     start: vi.fn(), stop: vi.fn(), resize: vi.fn(), dispose: vi.fn(),
   } satisfies RocketScene
   const ctl = createRocketController(root, deeper, rand)
@@ -36,7 +36,7 @@ describe('rocket controller', () => {
     const rolls = [0.1, 0.1, 0.97]
     const { root, ctl, scene } = setup(() => rolls.shift() ?? 0.1)
     await ctl.launch()
-    expect(scene.launch).toHaveBeenCalledWith(2)
+    expect(scene.launch).toHaveBeenCalledWith(2, expect.any(Function))
     expect(text(root, '[data-result]')).toBe('Stage 3 failed.')
   })
 })

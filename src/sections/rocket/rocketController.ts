@@ -3,10 +3,11 @@ import type { Deeper } from '../../ui/deeper'
 import { rollLaunch, successOdds } from './odds'
 
 // What the rocket does; the controller works without one. Stage 0 is the bottom stage, the first
-// to fire. `launch` resolves once the outcome shows (it made it, or a stage blew).
+// to fire. `launch` resolves once the outcome shows (it made it, or a stage blew), with false if the
+// flight was cut short (scrolled away); `rand` picks which way a failed stack tumbles.
 export interface RocketScene extends SceneHandle {
   build(steps: number, reliability: number): void
-  launch(failedAt: number | null): Promise<void>
+  launch(failedAt: number | null, rand: () => number): Promise<boolean>
   reset(): void
 }
 
@@ -46,12 +47,12 @@ export function createRocketController(root: HTMLElement, _deeper: Deeper, rand:
   // Readouts and the rocket for `n` stages at reliability `r`.
   function show(n: number, r: number): void {
     const pct = Math.round(r * 100)
-    stepsSlider.value = String(Math.max(1, n))
+    stepsSlider.value = String(n)
     reliabilitySlider.value = String(pct)
     stepsValue.textContent = String(n)
     reliabilityValue.textContent = `${pct}%`
     // How far along each track the accent fill reaches.
-    stepsSlider.style.setProperty('--fill', `${((Math.max(1, n) - 1) / 19) * 100}%`)
+    stepsSlider.style.setProperty('--fill', `${((n - 1) / 19) * 100}%`)
     reliabilitySlider.style.setProperty('--fill', `${((pct - 80) / 19) * 100}%`)
     odds.textContent = `${Math.round(successOdds(r, n) * 100)}%`
     if (oddsLabel) oddsLabel.textContent = n === 1 ? 'chance the one step works' : `chance all ${n} steps work`
@@ -76,10 +77,12 @@ export function createRocketController(root: HTMLElement, _deeper: Deeper, rand:
     lock(true)
     result.textContent = ''
     const { failedAt } = rollLaunch(reliability, steps, rand)
+    let landed = true
     try {
-      await scene?.launch(failedAt)
+      landed = (await scene?.launch(failedAt, rand)) ?? true
     } finally {
-      result.textContent = failedAt === null ? 'Made it!' : `Stage ${failedAt + 1} failed.`
+      // A flight cut short by scrolling away shows no result; the rocket is back on the pad.
+      if (landed) result.textContent = failedAt === null ? 'Made it!' : `Stage ${failedAt + 1} failed.`
       lock(false)
     }
   }
@@ -90,15 +93,15 @@ export function createRocketController(root: HTMLElement, _deeper: Deeper, rand:
     sceneReady()
   }
 
-  // The one-time Show beat: stack ten 95% stages one by one while the odds count down to 60%.
+  // The one-time Show beat: stack ten 95% stages one by one, from the first, while the odds count down to 60%.
   async function playIntro(): Promise<void> {
     lock(true)
     steps = DEFAULT.steps
     reliability = DEFAULT.reliability
     await Promise.race([sceneArrived, wait(INTRO.sceneWait)])
-    for (let n = 0; n <= steps; n++) {
+    for (let n = 1; n <= steps; n++) {
       show(n, reliability)
-      await wait(n === 0 ? INTRO.hold : INTRO.perStage)
+      await wait(n === 1 ? INTRO.hold : INTRO.perStage)
     }
     lock(false)
     root.classList.add('is-your-turn')

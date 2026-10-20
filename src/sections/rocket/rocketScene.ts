@@ -11,12 +11,14 @@ import ignitionUrl from './ignition.mp4'
 // Each part is a slice of a 1008×1792 still on black, in source pixels: x0..x1 is the crop (centered
 // on the part's body), `body` is the white body's width, and the y slices stack top to bottom at
 // natural scale. A stage keeps only its top and bottom ends (the middle of a cylinder is all the
-// same), and fewer of them as the stack grows, so twenty stages still fit. Each part starts just
+// same), and the nose keeps its cone and base but little of its long cylinder, so twenty stages
+// still fit. Each part starts just
 // under the band of the part above, so every seam lands on one silver band.
 type Part = { url: string; x0: number; x1: number; body: number; slices: [number, number][] }
 const SRC = 1008
-const NOSE: Part = { url: noseUrl, x0: 310, x1: 722, body: 397, slices: [[300, 1434]] }
+const NOSE: Part = { url: noseUrl, x0: 310, x1: 722, body: 397, slices: [[300, 1040], [1300, 1434]] }
 const STAGE_BOTTOM = 1396 // just under the stage's bottom band
+const STAGE_BAND = 26 // the bottom band's height, in the stage still
 const ENGINE: Part = { url: engineUrl, x0: 262, x1: 747, body: 265, slices: [[496, 560], [700, 1338]] }
 const NOZZLE = 1306 // the middle of the nozzle's opening, in the engine still
 
@@ -25,7 +27,7 @@ const units = (p: Part) => p.slices.reduce((h, [a, b]) => h + (b - a), 0) / p.bo
 const NOSE_U = units(NOSE)
 // A stage is between STAGE_U.min and .max body widths tall: its top below the band above, and its
 // own bottom band, with most of the cylinder's middle left out.
-const STAGE_U = { min: 0.3, max: 0.5 }
+const STAGE_U = { min: 0.36, max: 0.5 }
 
 function stagePart(u: number): Part {
   const h = u * 469
@@ -36,8 +38,8 @@ const ENGINE_U = units(ENGINE)
 
 // Layout, as shares of the stage: where the engine sits, the room above, the widest body.
 const PAD = { bottom: 0.8, top: 0.04, maxWidth: 84, maxShare: 0.2 }
-// Below this many px a stage can't carry a 12px stamp with room to breathe, so only stages 1, 5, 10, 15 and 20 get one.
-const STAMP_ROOM = { height: 20, width: 30 }
+// Below this many px a stage can't carry a 12px stamp on its body, so only stages 1, 5, 10, 15 and 20 get one.
+const STAMP_ROOM = { height: 17, width: 30 }
 // Flight, in seconds: ignition, then one stage passes every `step` while it climbs slowly; if they
 // all work it speeds off the top.
 const FLIGHT = { liftoff: 0.9, firstStep: 1.2, stepSpan: 2.8, minStep: 0.16, maxStep: 0.45, climb: 0.03, boost: 1.6, handoff: 4.4 }
@@ -73,6 +75,7 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     video.preload = 'auto' // mounted just before it's seen; Launch must answer at once
     video.disablePictureInPicture = true
     video.setAttribute('aria-hidden', 'true')
+    video.load() // iOS ignores preload; start buffering now
   }
 
   const pointer = createPointer(window, { reducedMotion: q.reducedMotion })
@@ -88,7 +91,7 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
   let last = 0
   let flight: {
     t0: number; failedAt: number | null; y: number; v: number; passed: number; boost: boolean
-    resolve: () => void; done: boolean
+    resolve: (landed: boolean) => void; done: boolean; dir: number
   } | null = null
   let flameOn = false
   let resetTimer = 0
@@ -134,6 +137,8 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     w = Math.min(widest, room / total)
     const STAGE = stagePart(stageU)
     const sparse = stageU * w < STAMP_ROOM.height || w < STAMP_ROOM.width
+    // The stamp sits in the middle of the stage's white body, above its band (not on the seam).
+    const bodyMid = `${(50 * (1 - STAGE_BAND / (stageU * STAGE.body))).toFixed(1)}%`
     const height = total * w
     rocket.style.left = `${sw / 2}px`
     rocket.style.top = `${sh * PAD.bottom - height}px`
@@ -150,7 +155,8 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
         stamp.className = 'rk-stamp'
         if (w < STAMP_ROOM.width) stamp.classList.add('is-beside') // too narrow to sit on the body
         stamp.textContent = `${Math.round(reliability * 100)}%`
-        stamp.style.fontSize = `${Math.max(12, Math.min(16, w * 0.3))}px`
+        stamp.style.fontSize = `${Math.max(12, Math.min(16, w * 0.3, stageU * w * 0.62))}px`
+        if (w >= STAMP_ROOM.width) stamp.style.top = bodyMid
         el.append(stamp)
       }
       if (grow && i === steps - 1) el.classList.add('is-new')
@@ -177,7 +183,7 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     for (const a of anims) a.cancel()
     anims = []
     clearTimeout(resetTimer)
-    if (flight && !flight.done) { flight.done = true; flight.resolve() }
+    if (flight && !flight.done) { flight.done = true; flight.resolve(false) } // cut short
     flight = null
     flameOn = false
     flame.classList.remove('is-on')
@@ -193,7 +199,7 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
   }
 
   // Stage `i` comes apart: a burst there, the stack above tumbles off, the rest drops and fades.
-  function explode(i: number): void {
+  function explode(i: number, dir: number): void {
     const el = stageEls[i]!
     const cy = el.offsetTop + (stageU * w) / 2
     const size = 6 * w
@@ -208,7 +214,6 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     ))
     const above = parts.slice(0, parts.indexOf(el))
     const below = parts.slice(parts.indexOf(el) + 1)
-    const dir = Math.random() < 0.5 ? -1 : 1
     for (const p of above) {
       // One rigid tumble: every piece turns about the burst point.
       p.style.transformOrigin = `${p.offsetWidth / 2}px ${cy - p.offsetTop}px`
@@ -249,10 +254,10 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     // Stages pass one by one; the failing one bursts on its turn.
     while (f.passed < steps && t >= stepTime(f.passed)) {
       if (f.passed === f.failedAt) {
-        explode(f.passed)
+        explode(f.passed, f.dir)
         f.done = true
         resetTimer = window.setTimeout(rebuild, 2600)
-        setTimeout(f.resolve, 600)
+        setTimeout(() => f.resolve(true), 600)
         return
       }
       pass(f.passed++)
@@ -273,7 +278,7 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     }
     if (f.y > sh * PAD.bottom + 40) {
       f.done = true
-      f.resolve()
+      f.resolve(true)
       resetTimer = window.setTimeout(rebuild, 900)
     }
   }
@@ -304,7 +309,7 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
       clearLaunch()
       layout(grow)
     },
-    launch(failedAt: number | null) {
+    launch(failedAt: number | null, rand: () => number) {
       clearLaunch()
       layout()
       // Reduced motion (or not running): no flight, just the result on the pad.
@@ -312,10 +317,11 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
         const upTo = failedAt ?? steps
         for (let i = 0; i < upTo; i++) pass(i)
         if (failedAt !== null) for (const p of parts.slice(0, parts.indexOf(stageEls[failedAt]!) + 1)) p.classList.add('is-failed')
-        return Promise.resolve()
+        return Promise.resolve(true)
       }
-      return new Promise<void>((resolve) => {
-        flight = { t0: performance.now(), failedAt, y: 0, v: 0, passed: 0, boost: false, resolve, done: false }
+      return new Promise<boolean>((resolve) => {
+        const dir = rand() < 0.5 ? -1 : 1 // which way a failed stack tumbles
+        flight = { t0: performance.now(), failedAt, y: 0, v: 0, passed: 0, boost: false, resolve, done: false, dir }
         if (video) {
           video.currentTime = 0
           video.play().then(
