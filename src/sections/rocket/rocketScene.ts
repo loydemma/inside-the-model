@@ -36,8 +36,8 @@ const ENGINE_U = units(ENGINE)
 
 // Layout, as shares of the stage: where the engine sits, the room above, the widest body.
 const PAD = { bottom: 0.8, top: 0.04, maxWidth: 84, maxShare: 0.2 }
-// Below this many px a stage can't carry a 12px stamp, so only stages 1, 5, 10, 15 and 20 get one.
-const STAMP_ROOM = { height: 11, width: 30 }
+// Below this many px a stage can't carry a 12px stamp with room to breathe, so only stages 1, 5, 10, 15 and 20 get one.
+const STAMP_ROOM = { height: 20, width: 30 }
 // Flight, in seconds: ignition, then one stage passes every `step` while it climbs slowly; if they
 // all work it speeds off the top.
 const FLIGHT = { liftoff: 0.9, firstStep: 1.2, stepSpan: 2.8, minStep: 0.16, maxStep: 0.45, climb: 0.03, boost: 1.6, handoff: 4.4 }
@@ -148,6 +148,7 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
       if (!sparse || i === 0 || (i + 1) % 5 === 0) {
         const stamp = document.createElement('span')
         stamp.className = 'rk-stamp'
+        if (w < STAMP_ROOM.width) stamp.classList.add('is-beside') // too narrow to sit on the body
         stamp.textContent = `${Math.round(reliability * 100)}%`
         stamp.style.fontSize = `${Math.max(12, Math.min(16, w * 0.3))}px`
         el.append(stamp)

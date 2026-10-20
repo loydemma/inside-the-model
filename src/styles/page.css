@@ -495,6 +495,7 @@ html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition:
   transition: background-color 160ms, color 160ms;
 }
 .rk-stage.is-passed .rk-stamp { background: var(--accent); }
+.rk-stamp.is-beside { left: calc(100% + 6px); translate: 0 -50%; background: var(--accent); color: var(--glass-ink); }
 .rk-part.is-failed { opacity: 0.22; }
 /* Exhaust and burst screen over the rocket; the clip's cropped sides feather away. */
 .rk-flame, .rk-ignition, .rk-boom { mix-blend-mode: screen; pointer-events: none; }
