@@ -67,6 +67,7 @@ export function createJelloController(root: HTMLElement, data: TemperatureData, 
     reveal('[data-caption]')
     await wait(INTRO.hint)
     reveal('[data-hint]')
+    root.classList.add('is-your-turn')
     await wait(INTRO.why)
     reveal('.why')
   }
@@ -75,19 +76,23 @@ export function createJelloController(root: HTMLElement, data: TemperatureData, 
   function showAnswered(): void {
     setStop(0)
     reveal('[data-caption]', '[data-hint]', '.why')
+    root.classList.add('is-your-turn')
   }
 
   slider.addEventListener('input', () => setStop(Number(slider.value)))
 
   if (stage) {
     stage.addEventListener('pointerdown', (e) => {
+      root.classList.add('has-poked') // the "poke the jello" prompt has done its job
       const r = stage.getBoundingClientRect()
       poke((e.clientX - r.left) / (r.width || 1), (e.clientY - r.top) / (r.height || 1))
     })
     stage.addEventListener('keydown', (e) => {
       if (e.key !== ' ' && e.key !== 'Enter') return
       e.preventDefault()
-      if (!e.repeat) poke()
+      if (e.repeat) return
+      root.classList.add('has-poked')
+      poke()
     })
   }
 

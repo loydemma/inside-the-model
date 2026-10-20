@@ -12,8 +12,6 @@
   <link rel="stylesheet" href="/src/styles/deeper.css" />
 </head>
 <body>
-  <a class="home-link" href="#" data-portfolio-link>Emma Loyd</a>
-  <span class="status-pill" id="status-pill" role="status">LOADING</span>
 
   <main>
     <section id="orange" class="stage-section" aria-labelledby="orange-title">
@@ -26,7 +24,7 @@
         <p class="eyebrow">01 · Tokens</p>
         <h2 class="ask" id="orange-title">How many letters does AI see in <em>oranges</em>?</h2>
         <div class="orange-stage" data-orange-stage aria-hidden="true">
-          <span class="hold-pill"><span class="hold-dot"></span>Slice the orange with your knife</span>
+          <span class="hold-pill"><span class="hold-dot"></span><span class="pill-mouse">Hover over the orange to grab your knife, then slice</span><span class="pill-touch">Swipe across the orange to slice it</span></span>
         </div>
         <p class="caption" data-caption>AI doesn&rsquo;t see letters. It sees chunks, so counting letters is surprisingly hard for it.</p>
         <p class="counter" data-counter aria-live="polite">You see <span data-letters>7</span> <span data-letters-unit>letters</span>. AI sees <span data-chunks>2</span> <span data-chunks-unit>chunks</span>.</p>
@@ -102,7 +100,9 @@ enc.encode("orange")    // [65681], one chunk</code></pre>
       <div class="stage-text">
         <p class="eyebrow">03 · Temperature</p>
         <h2 class="ask" id="jello-title">Why does AI give a different answer every time?</h2>
-        <div class="jello-stage" data-jello-stage tabindex="0" role="button" aria-label="Poke the jello (Space or Enter)"></div>
+        <div class="jello-stage" data-jello-stage tabindex="0" role="button" aria-label="Poke the jello (Space or Enter)">
+          <span class="hold-pill" aria-hidden="true"><span class="hold-dot"></span>Pick a temperature, then poke the jello</span>
+        </div>
         <p class="caption" data-caption>A setting called temperature controls how much it gambles on less likely words.</p>
         <p class="hint" data-hint>Drag the slider, then poke the jello.</p>
         <div class="jello-controls">

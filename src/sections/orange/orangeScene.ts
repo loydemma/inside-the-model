@@ -7,7 +7,6 @@ import {
 import { color, mix, pass, screenUV, smoothstep, uniform, vec2 } from 'three/tsl'
 import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 import { createRenderer } from '../../engine/renderer'
-import { setStatus } from '../../engine/status'
 import { createPointer, MAX_TILT_RAD, smoothToward } from '../../engine/pointer'
 import type { Quality } from '../../engine/quality'
 import type { OrangeScene } from './orangeController'
@@ -308,7 +307,7 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
   const still = q.reducedMotion
   const high = q.tier === 'high'
   const stage = (canvas.closest('section')?.querySelector('[data-orange-stage]') ?? canvas) as HTMLElement
-  const { renderer, backend } = await createRenderer(canvas, q)
+  const { renderer } = await createRenderer(canvas, q)
   renderer.toneMapping = NeutralToneMapping
   renderer.toneMappingExposure = 1
 
@@ -945,7 +944,6 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
     start: () => {
       started = true
       last = performance.now()
-      setStatus(backend === 'webgpu' ? 'WEBGPU · LIVE' : 'WEBGL · LIVE')
       renderer.setAnimationLoop(tick)
     },
     stop: () => renderer.setAnimationLoop(null),

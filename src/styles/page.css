@@ -37,52 +37,8 @@ a { color: inherit; }
 }
 .btn:hover { border-color: var(--accent); background: rgba(154, 166, 255, 0.16); box-shadow: var(--control-glow); }
 .btn:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--control-glow); }
-.home-link:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 
-.home-link {
-  position: fixed;
-  top: 18px;
-  left: var(--gutter);
-  z-index: 20;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(5, 6, 10, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
 
-.status-pill {
-  position: fixed;
-  top: 18px;
-  right: var(--gutter);
-  z-index: 20;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  font-weight: 700;
-  padding: 6px 12px 6px 24px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--rule);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.status-pill::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  width: 6px;
-  height: 6px;
-  margin-top: -3px;
-  border-radius: 50%;
-  background: #6ee7a8;
-  box-shadow: 0 0 8px #6ee7a8;
-}
-.status-pill[data-state='unavailable']::before { background: #71717a; box-shadow: none; }
 
 /* Opening title block, at the top of the first section */
 .title-block { margin-bottom: auto; }
@@ -217,6 +173,9 @@ html.js [data-reveal].in-view { opacity: 1; transform: none; }
    a chef's knife. */
 #orange { --mood: #ff9628; }
 #orange.has-cut .hold-pill { opacity: 0; }
+/* No hover or cursor on touch screens, so the orange's prompt says swipe there. */
+.pill-touch { display: none; }
+@media (hover: none) { .pill-mouse { display: none; } .pill-touch { display: inline; } }
 #orange .title-block h1 { font-size: clamp(30px, 4.4vw, 54px); }
 #orange .title-block .sub { margin-top: 10px; font-size: clamp(15px, 1.6vw, 19px); }
 #orange .eyebrow { margin-top: 36px; }
@@ -396,6 +355,8 @@ html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition:
 
 /* Jello: three clips of a rainbow jello on a plate. The stage holds them and takes the pokes. */
 #jello { background: var(--stage); } /* a backdrop for the video to screen onto */
+#jello { --mood: var(--accent); }
+#jello.has-poked .hold-pill { opacity: 0; }
 .jello-stage {
   position: relative;
   height: clamp(260px, 40svh, 380px);

@@ -1,6 +1,6 @@
 import { initDeeper } from './ui/deeper'
 import { detectQuality } from './engine/quality'
-import { setStatus, showFallback } from './engine/status'
+import { showFallback } from './engine/status'
 import { initReveals } from './engine/reveal'
 import { onFirstArrival } from './engine/arrival'
 import { mountWhenVisible } from './engine/sceneHost'
@@ -13,7 +13,6 @@ import { parseHallucination, parseTemperature } from './data/types'
 import { PORTFOLIO_URL, REPO_URL } from './config'
 
 const q = detectQuality()
-setStatus('LOADING')
 initReveals(document, { reducedMotion: q.reducedMotion })
 
 // Without GPU acceleration, live 3D freezes the page, so skip the scenes there.

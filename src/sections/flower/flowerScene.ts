@@ -7,7 +7,6 @@ import {
 import { abs, color, dot, mix, pass, screenUV, smoothstep, texture, uniform, uv, vec2, vec3 } from 'three/tsl'
 import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 import { createRenderer } from '../../engine/renderer'
-import { setStatus } from '../../engine/status'
 import { createPointer, MAX_TILT_RAD, smoothToward } from '../../engine/pointer'
 import type { Quality } from '../../engine/quality'
 import type { FlowerScene } from './flowerController'
@@ -161,7 +160,7 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
   const still = q.reducedMotion
   const high = q.tier === 'high'
   const stage = (canvas.closest('section')?.querySelector('[data-flower-stage]') ?? canvas) as HTMLElement
-  const [{ renderer, backend }, rose, blue, white, leafMap, stemMap] = await Promise.all([
+  const [{ renderer }, rose, blue, white, leafMap, stemMap] = await Promise.all([
     createRenderer(canvas, q),
     loadTexture(petalRoseUrl), loadTexture(petalBlueUrl), loadTexture(petalWhiteUrl), loadTexture(leafUrl), loadTexture(stemUrl),
   ])
@@ -486,7 +485,6 @@ export async function createFlowerScene(canvas: HTMLCanvasElement, q: Quality): 
     start: () => {
       started = true
       last = performance.now()
-      setStatus(backend === 'webgpu' ? 'WEBGPU · LIVE' : 'WEBGL · LIVE')
       renderer.setAnimationLoop(tick)
     },
     stop: () => renderer.setAnimationLoop(null),
