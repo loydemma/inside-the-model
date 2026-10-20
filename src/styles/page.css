@@ -497,7 +497,7 @@ html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition:
 @media (prefers-reduced-motion: reduce) { #rocket [data-launch] { animation: none !important; } }
 .rk-tilt { position: absolute; inset: 0; transform-origin: 50% 80%; }
 .rk-rocket { position: absolute; width: 0; will-change: transform; }
-.rk-part, .rk-slice, .rk-flame, .rk-ignition, .rk-boom { position: absolute; }
+.rk-part, .rk-slice, .rk-ignition, .rk-boom { position: absolute; }
 .rk-slice { left: 0; right: 0; background-repeat: no-repeat; }
 .rk-stage.is-new { animation: rk-stack 260ms ease-out; }
 @keyframes rk-stack { from { opacity: 0; transform: translateY(-14px); } }
@@ -521,10 +521,7 @@ html.js .flower-controls.is-shown { opacity: 1; visibility: visible; transition:
 .rk-stamp.is-beside { left: calc(100% + 6px); translate: 0 -50%; background: var(--accent); color: var(--glass-ink); }
 .rk-part.is-failed { opacity: 0.22; }
 /* Exhaust and burst screen over the rocket; the clip's cropped sides feather away. */
-.rk-flame, .rk-ignition, .rk-boom { mix-blend-mode: screen; pointer-events: none; }
-.rk-flame { background-repeat: no-repeat; transform-origin: 50% 0; opacity: 0; transition: opacity 500ms ease-out; }
-.rk-flame.is-on { transition-duration: 700ms; }
-.rk-flame:not(.is-on) { opacity: 0 !important; }
+.rk-ignition, .rk-boom { mix-blend-mode: screen; pointer-events: none; }
 .rk-ignition {
   object-fit: cover;
   opacity: 0;

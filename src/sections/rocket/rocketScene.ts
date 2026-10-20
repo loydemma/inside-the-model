@@ -4,7 +4,6 @@ import type { RocketScene } from './rocketController'
 import noseUrl from './rocket-nose.jpg'
 import stageUrl from './rocket-stage.jpg'
 import engineUrl from './rocket-engine.jpg'
-import flameUrl from './flame.jpg'
 import explosionUrl from './explosion.jpg'
 import ignitionUrl from './ignition.mp4'
 
@@ -45,7 +44,7 @@ const STAMP_ROOM = { height: 17, width: 30 }
 const FLIGHT = { liftoff: 0.9, firstStep: 1.2, stepSpan: 2.8, minStep: 0.16, maxStep: 0.45, climb: 0.03, boost: 1.6, handoff: 4.4 }
 
 // Rocket on the pad: nose, N stages stamped with the reliability, engine. Launch plays the ignition
-// clip once at the nozzle, then a flickering still flame; a failed stage bursts and the stack above
+// clip once at the nozzle, fading out as it climbs; a failed stage bursts and the stack above
 // it tumbles away.
 export async function createRocketScene(stage: HTMLElement, q: Quality): Promise<RocketScene> {
   // The card screens onto the stage, so the stills' black falls away. It is never 3D-transformed
@@ -60,9 +59,6 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
   card.append(tilt)
   stage.append(card)
 
-  const flame = document.createElement('div')
-  flame.className = 'rk-flame'
-  flame.style.backgroundImage = `url(${flameUrl})`
   const boom = document.createElement('div')
   boom.className = 'rk-boom'
   boom.style.backgroundImage = `url(${explosionUrl})`
@@ -93,7 +89,6 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     t0: number; failedAt: number | null; y: number; v: number; passed: number; boost: boolean
     resolve: (landed: boolean) => void; done: boolean; dir: number
   } | null = null
-  let flameOn = false
   let resetTimer = 0
   let anims: Animation[] = []
 
@@ -169,12 +164,8 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     nozzleY = y + ((NOZZLE - ENGINE.slices[1]![0] + ENGINE.slices[0]![1] - ENGINE.slices[0]![0]) * w) / ENGINE.body
     // Exhaust hangs from the nozzle and rides with the rocket.
     const ex = 4.4 * w
-    const fw = 1.6 * w // the flame still's jet, x 300..708, at this width
-    place(flame, -fw / 2, nozzleY - 0.1 * w, fw, (fw * 1792) / 408)
-    flame.style.backgroundSize = `${(fw * SRC) / 408}px auto`
-    flame.style.backgroundPosition = `${(-300 * fw) / 408}px 0`
     if (video) place(video, -ex / 2, nozzleY - 0.12 * w, ex, ex)
-    rocket.append(...parts, flame)
+    rocket.append(...parts)
     if (video) rocket.append(video)
     rocket.style.height = `${height}px`
   }
@@ -185,9 +176,6 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     clearTimeout(resetTimer)
     if (flight && !flight.done) { flight.done = true; flight.resolve(false) } // cut short
     flight = null
-    flameOn = false
-    flame.classList.remove('is-on')
-    flame.style.transform = ''
     video?.pause()
     video?.classList.remove('is-on')
     boom.remove()
@@ -229,8 +217,6 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
         { duration: 1500, easing: 'cubic-bezier(.4,0,.8,.6)', fill: 'forwards' },
       ))
     }
-    flameOn = false
-    flame.classList.remove('is-on')
     video?.classList.remove('is-on')
   }
 
@@ -268,13 +254,9 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
       f.y += f.v * dt
     }
     rocket.style.transform = `translateY(${-f.y}px)`
-    // The clip ignites, then hands off to the steady flame before its fireball reaches the crop.
-    if (!flameOn && (t > FLIGHT.handoff || !video || video.ended || video.paused)) {
-      if (t > 0.3) {
-        flameOn = true
-        flame.classList.add('is-on')
-        video?.classList.remove('is-on')
-      }
+    // The clip ignites, then fades out before its fireball reaches the crop.
+    if (video?.classList.contains('is-on') && t > 0.3 && (t > FLIGHT.handoff || video.ended || video.paused)) {
+      video.classList.remove('is-on')
     }
     if (f.y > sh * PAD.bottom + 40) {
       f.done = true
@@ -290,11 +272,6 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
     lean = smoothToward(lean, p.x * MAX_TILT_RAD, dt, 4)
     tilt.style.transform = `translateX(${lean * 60}px) rotate(${lean * 0.25}rad)`
     fly(dt, now)
-    if (flameOn) {
-      const s = now / 1000
-      flame.style.transform = `scale(${1 + 0.05 * Math.sin(s * 37)}, ${1 + 0.07 * Math.sin(s * 23) + 0.04 * Math.sin(s * 61 + 1)})`
-      flame.style.opacity = (0.86 + 0.12 * Math.sin(s * 47)).toFixed(3)
-    }
     raf = requestAnimationFrame(tick)
   }
 
@@ -324,11 +301,8 @@ export async function createRocketScene(stage: HTMLElement, q: Quality): Promise
         flight = { t0: performance.now(), failedAt, y: 0, v: 0, passed: 0, boost: false, resolve, done: false, dir }
         if (video) {
           video.currentTime = 0
-          video.play().then(
-            () => video.classList.add('is-on'),
-            // Autoplay refused (e.g. iOS Low Power Mode): the still flame carries the launch.
-            () => { flameOn = true; flame.classList.add('is-on') },
-          )
+          // Autoplay refused (e.g. iOS Low Power Mode): the rocket climbs without the clip.
+          video.play().then(() => video.classList.add('is-on'), () => {})
         }
       })
     },
