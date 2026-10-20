@@ -30,6 +30,10 @@ const TRAIL_MS = 240 // a slash trail fades over this long
 const SWIPE_MS = 260 // the intro blade's slash
 const SETTLE_MS = 320 // after a slash, before the next one
 const DROPS = 72
+const DIMPLE = 0.06 // stem-end dimple depth, in orange radii
+const DIMPLE_W = 0.26 // and its width, in radians from the stem
+const SQUAT = 0.95 // height over width
+const TIP = 0.6 // how far (rad) the stem end leans toward the camera; the word sits that far north too
 const FLESH_GLOW = 0.4
 const GLINT = 1 // a fresh cut face's glow, settling to FLESH_GLOW
 
@@ -116,20 +120,20 @@ function peelTextures(W: number): { base: HTMLCanvasElement; map: CanvasTexture;
     }
   }
   // The stem end: an olive, five-lobed calyx with a dark scar. The navel end: a small pale spot.
-  const lobe = (x: number) => H * (0.016 + 0.011 * Math.max(0, Math.cos((x / W) * Math.PI * 2 * 5)))
+  const lobe = (x: number) => H * (0.03 + 0.02 * Math.max(0, Math.cos((x / W) * Math.PI * 2 * 5)))
   cg.beginPath()
   cg.moveTo(0, 0)
   for (let x = 0; x <= W; x += 4) cg.lineTo(x, lobe(x))
   cg.lineTo(W, 0)
   cg.closePath()
-  const calyx = cg.createLinearGradient(0, 0, 0, H * 0.03)
-  calyx.addColorStop(0, '#3d3a1a')
-  calyx.addColorStop(0.3, '#6f6a2c')
-  calyx.addColorStop(1, '#a3862e')
+  const calyx = cg.createLinearGradient(0, 0, 0, H * 0.05)
+  calyx.addColorStop(0, '#2c3410')
+  calyx.addColorStop(0.35, '#557021')
+  calyx.addColorStop(1, '#8c9636')
   cg.fillStyle = calyx
   cg.fill()
   bg.fillStyle = 'rgba(0,0,0,0.35)'
-  bg.fillRect(0, 0, W, H * 0.008)
+  bg.fillRect(0, 0, W, H * 0.014)
   const navel = cg.createLinearGradient(0, H, 0, H * 0.985)
   navel.addColorStop(0, 'rgba(214,150,70,0.9)')
   navel.addColorStop(1, 'rgba(214,150,70,0)')
@@ -197,7 +201,8 @@ function inkText(map: CanvasTexture, base: HTMLCanvasElement, text: string): num
     g.textBaseline = 'middle'
     g.fillStyle = 'rgba(48, 18, 4, 0.86)'
     const lh = size * 1.08
-    lines.forEach((l, i) => g.fillText(l, W * 0.25, H / 2 + (i - (lines.length - 1) / 2) * lh))
+    const y = H * (0.5 - TIP / Math.PI) // north of the equator, so it faces the camera once tipped
+    lines.forEach((l, i) => g.fillText(l, W * 0.25, y + (i - (lines.length - 1) / 2) * lh))
     if (lines.length === 1 && word === text) {
       const x0 = W * 0.25 - g.measureText(word).width / 2
       map.needsUpdate = true
@@ -266,6 +271,33 @@ function volume(geos: BufferGeometry[]): number {
 type Label = { group: Group; text: Mesh; pill: Mesh; w: number; appear: Spring }
 // A piece's geometry stays in the whole orange's frame; `c` is its centroid there. `pos`/`q` place
 // that centroid in the fit group, eased toward `toPos`/`toQ`.
+// An orange, not a ball: a little squat, with a shallow dimple at the stem end (the top, where the
+// peel texture paints the calyx). Normals come from the profile so the dimple shades smoothly.
+function orangeGeometry(segments: number): BufferGeometry {
+  const sphere = new SphereGeometry(1, segments, segments / 2)
+  const pos = sphere.getAttribute('position')
+  const nor = sphere.getAttribute('normal')
+  const p = new Vector3()
+  const er = new Vector3()
+  const et = new Vector3()
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i)
+    const th = Math.acos(Math.max(-1, Math.min(1, p.y))) // angle from the stem end
+    const k = Math.exp(-((th / DIMPLE_W) ** 2))
+    const r = 1 - DIMPLE * k
+    const dr = DIMPLE * k * (2 * th) / (DIMPLE_W * DIMPLE_W) // d r / d th
+    const s = Math.sin(th)
+    er.copy(p)
+    et.set(s > 1e-6 ? (p.x * Math.cos(th)) / s : 0, -s, s > 1e-6 ? (p.z * Math.cos(th)) / s : 0)
+    const n = er.clone().multiplyScalar(r).addScaledVector(et, -dr).multiply(new Vector3(1, 1 / SQUAT, 1)).normalize()
+    pos.setXYZ(i, p.x * r, p.y * r * SQUAT, p.z * r)
+    nor.setXYZ(i, n.x, n.y, n.z)
+  }
+  const geo = sphere.toNonIndexed()
+  sphere.dispose()
+  return geo
+}
+
 type Piece = {
   group: Group; peel: Mesh; caps: Mesh[]; c: Vector3; box: Box3
   pos: Vector3; q: Quaternion; toPos: Vector3; toQ: Quaternion; label: Label | null
@@ -452,9 +484,11 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
     tokenCount = count
     cutChars = 0
     inkU = inkText(peelTex.map, peelTex.base, next)
-    const sphere = new SphereGeometry(1, segments, segments / 2)
-    main = makePiece(sphere.toNonIndexed(), [], null)
-    sphere.dispose()
+    main = makePiece(orangeGeometry(segments), [], null)
+    // Tipped toward the camera so the stem end shows.
+    main.q.setFromAxisAngle(new Vector3(1, 0, 0), TIP)
+    main.toQ.copy(main.q)
+    place(main)
     pieces = [main]
     plan()
     if (!still && started) entrance.x = 0.86
@@ -769,7 +803,7 @@ export async function createOrangeScene(canvas: HTMLCanvasElement, q: Quality): 
     const u = inkU?.[cutChars + label.text.length]
     if (u !== undefined) {
       const a = u * Math.PI * 2
-      const gap = toNdc(new Vector3(-Math.cos(a), 0, Math.sin(a)).applyMatrix4(main.peel.matrixWorld))
+      const gap = toNdc(new Vector3(-Math.cos(a) * Math.cos(TIP), Math.sin(TIP) * SQUAT, Math.sin(a) * Math.cos(TIP)).applyMatrix4(main.peel.matrixWorld))
       if (gap.x > ndcBox.x0 + wx * 0.08 && gap.x < ndcBox.x1 - wx * 0.08) { x = gap.x; y = gap.y }
     }
     const lean = 0.07 * wx // a slight slant, like a real slash
