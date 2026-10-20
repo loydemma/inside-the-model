@@ -3,6 +3,9 @@ import type { HallucinationData, GenerationStep } from '../../data/types'
 import type { Deeper } from '../../ui/deeper'
 import { createGrowth, STEP_MS, type GrowthEvent } from './growth'
 
+const INTRO_PACE = STEP_MS / 290 // ~290ms a word
+const CALM_PACE = STEP_MS / 850 // ~850ms a word
+
 // What the 3D flower does; the controller works without one. One petal per word of the answer.
 export interface FlowerScene extends SceneHandle {
   setPetalCount(n: number): void
@@ -125,7 +128,9 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
       await wait(FRAME_MS)
       // Real elapsed time, so a busy or throttled page doesn't slow the answer down.
       const now = Date.now()
-      frame(Math.min(now - last, 100))
+      // The intro hurries so the invented author lands within ~3s; your own answers grow at a readable pace.
+      const pace = auto && run === 'ungrounded' ? INTRO_PACE : CALM_PACE
+      frame(Math.min(now - last, 100) * pace)
       last = now
     }
     looping = false
