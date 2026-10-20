@@ -120,9 +120,13 @@ export function createFlowerController(root: HTMLElement, data: HallucinationDat
   async function loop(): Promise<void> {
     if (looping) return
     looping = true
+    let last = Date.now()
     while ((auto || holding) && !finished) {
       await wait(FRAME_MS)
-      frame(FRAME_MS)
+      // Real elapsed time, so a busy or throttled page doesn't slow the answer down.
+      const now = Date.now()
+      frame(Math.min(now - last, 100))
+      last = now
     }
     looping = false
   }
